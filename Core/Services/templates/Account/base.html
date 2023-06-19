@@ -7,7 +7,17 @@
 </head>
 <body>
 <div class="d-flex justify-content-end align-items-start">
-  <h1>Hello user</h1>
+    <ul>
+        <li><h3 class="list-group-item-text">Hello {{ username }}</h3></li>
+        <li><a class="list-group-item-success" href={% url 'logout' %} >Выход</a> </li>
+
+    </ul>
+
+
+{% for photo in photos %}
+
+{% endfor %}
+
 </div>
     <div class="text-center">
     <ul class="list-group">

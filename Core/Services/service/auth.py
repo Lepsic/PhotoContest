@@ -3,6 +3,7 @@ import re
 
 
 class ServiceCreationUser:
+    """Вспомогательный класс для создания пользователя. Вся валидация данных тут"""
     def __init__(self, form, data=None):
         self.validate_data = None
         self.form = form
