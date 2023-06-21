@@ -22,9 +22,9 @@ def upload_photo(request):
     """Загрузка фото на сервер"""
     if request.method == 'POST':
         form = UploadPhoto(request.POST, request.FILES)
+        form.service_validate.set_data(request)
         if form.is_valid():
-            photo_type = request.FILES.get('media').content_type
-            print(type(photo_type))
+            form.service_validate.save_content()
             render(request, 'Account/upload.html')
         else:
             return render(request, 'Account/upload.html', {'form': form})

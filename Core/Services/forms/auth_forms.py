@@ -13,7 +13,7 @@ class UserCreationsForm(forms.Form):
     last_name = forms.CharField(max_length=100, required=False)
     pas1 = forms.CharField(max_length=40)
     pas2 = forms.CharField(max_length=40)
-    image = forms.ImageField(required=False)
+
 
     def clean(self):
         cleaned_data = super().clean()
