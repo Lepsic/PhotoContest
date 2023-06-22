@@ -10,14 +10,17 @@ class UploadManager:
     content_type = (['image/png',
                      ])
     media_field = 'media'
-    PhotoDirectory = 'photo'
-    path_photo = None
+    PhotoDirectory = 'Services/img'
 
     def __init__(self, request=None, form=None):
+
         self.request = request
         self.form = form
         self.validate_data = None
         self.photo = None
+        # получать из переменной окружения
+        self.path_to_static = '/home/lepsic/SaltAndPapperMentorLearn/PhotoContest/Core/Services/static'
+        self.path_photo = None
 
     def set_data(self, request=None):
         self.request = request
@@ -41,13 +44,17 @@ class UploadManager:
         self.__validate_name()
 
     def save_photo(self):
-        photo = self.request.FILES['media']
-        self.path_photo = '{}/{}/{}'.format(settings.MEDIA_ROOT, self.PhotoDirectory,
-                                            ''.join([datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), ' ', photo.name]))
-        print(self.path_photo)
-        with open(self.path_photo, 'wb+') as destination:
+        photo = self.request.FILES[self.media_field]
+
+        name = ''.join([datetime.now().strftime('%Y-%m-%d%H:%M:%S.%f'), photo.name.replace(' ', '')])
+        absolute_path_photo = '{}/{}/{}'.format(self.path_to_static, self.PhotoDirectory,
+                                                name)
+
+        self.path_photo = "{}/{}".format(self.PhotoDirectory, name)
+        with open(absolute_path_photo, 'wb+') as destination:
             for chunk in photo.chunks():
                 destination.write(chunk)
+        self.path_photo = "{}{}/{}".format(settings.STATIC_URL, self.PhotoDirectory, name)
 
     def save_content(self):
         request_data = self.request.POST
@@ -58,4 +65,4 @@ class UploadManager:
                                                 create_data=datetime.now())
             photo.save()
         except Exception:
-            os.remove(self.path_photo)
+            os.remove('{}/{}'.format(self.path_to_static, self.path_photo))
