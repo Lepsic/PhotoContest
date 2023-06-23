@@ -2,19 +2,27 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from ..forms.upload_photo import UploadPhoto
-from ..models import photo_content
-from ..service.upload_photo import UploadManager
+from ..models import PhotoContent
+from django.conf import settings
+from ..service.photo_manager import PhotoManager
 
 
 @login_required()
 def base_account(request):
     """Базовая страница профиля"""
-    context = {'username': request.user.username}
-
+    photo = PhotoContent.objects.get(pk=1)
+    print(photo.content)
+    context = {'username': request.user.username, 'photo': photo.content}
 
     return render(request, 'Account/base.html', context=context)
 
 
+@login_required()
+def a_filter_content(request):
+    manager = PhotoManager(request=request)
+    print(request.POST['filter_type'])
+    response = manager.filter_on_profile()
+    return JsonResponse(response)
 
 
 @login_required()

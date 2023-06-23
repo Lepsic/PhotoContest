@@ -1,28 +1,56 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
       integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-
+    {% csrf_token %}
 </head>
 <body>
 <div class="d-flex justify-content-end align-items-start">
     <ul>
         <li><h3 class="list-group-item-text">Hello {{ username }}</h3></li>
         <li><a class="list-group-item-success" href={% url 'logout' %} >Выход</a> </li>
-
     </ul>
 
-
+{% load static %}
 
 
 </div>
     <div class="text-center">
+        <table id="table-photo">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Название</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+        </table>
+
+
     <ul class="list-group">
-        <li class="list-group-item"><a>Как нибудь впихнуть отображение всех фоток</a></li>
+
         <li class="list-group-item"><a href='upload'>Загрузка фото</a></li>
     </ul>
         </div>
 
 </body>
 </html>
+
+<div class="btn-group-justified" role="group" aria-label="Justified radio toggle button group">
+    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio0" autocomplete="off" value="None" checked>
+    <label class="btn btn-outline-danger" for="vbtn-radio0">Все</label>
+
+    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio1" autocomplete="off" value="waiting">
+    <label class="btn btn-outline-danger" for="vbtn-radio1">В ожидании публикации</label>
+
+    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio2" autocomplete="off" value="published">
+    <label class="btn btn-outline-danger" for="vbtn-radio2">Опубликовано</label>
+
+    <input type="radio" class="btn-check" name="vbtn-radio" id="vbtn-radio3" autocomplete="off" value="rejected">
+    <label class="btn btn-outline-danger" for="vbtn-radio3">Отклонено</label>
+    </div>
+{% load static %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src={% static 'Services/js/filter_content_profile.js' %}></script>
