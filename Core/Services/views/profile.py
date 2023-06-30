@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -10,9 +12,8 @@ from ..service.photo_manager import PhotoManager
 @login_required()
 def base_account(request):
     """Базовая страница профиля"""
-    photo = PhotoContent.objects.get(pk=1)
-    print(photo.content)
-    context = {'username': request.user.username, 'photo': photo.content}
+
+    context = {'username': request.user.username}
 
     return render(request, 'Account/base.html', context=context)
 
@@ -20,7 +21,6 @@ def base_account(request):
 @login_required()
 def a_filter_content(request):
     manager = PhotoManager(request=request)
-    print(request.POST['filter_type'])
     response = manager.filter_on_profile()
     return JsonResponse(response)
 
@@ -39,3 +39,17 @@ def upload_photo(request):
     else:
         form = UploadPhoto()
     return render(request, 'Account/upload.html', {'form': form})
+
+
+@login_required()
+def delete_photo(request):
+    if request.method == 'DELETE':
+        manager = PhotoManager(request)
+        body = json.loads(request.body.decode('utf-8'))
+        manager.delete_photo(body)
+        return HttpResponse(status=200)
+
+
+@login_required()
+def change_photo():
+    pass

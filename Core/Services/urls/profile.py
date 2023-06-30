@@ -8,6 +8,8 @@ urlpatterns = [
     path('profile/', view.base_account, name='profile'),
     path('profile/upload/', view.upload_photo, name='upload'),
     path('profile/filterUserPhoto/', view.a_filter_content),
+    path('profile/delete', view.delete_photo),
+
 
 
 ]
