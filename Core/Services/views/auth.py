@@ -20,6 +20,5 @@ def create_user(request):
         return render(request, 'auth/create.html', {'form': form})
 
 
-
 class LogoutView(Logout):
     next_page = reverse_lazy('login')

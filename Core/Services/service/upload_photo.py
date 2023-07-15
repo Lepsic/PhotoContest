@@ -1,5 +1,5 @@
 import os
-
+from loguru import logger
 from ..models import PhotoContent
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.conf import settings
@@ -49,13 +49,18 @@ class UploadManager:
         self.__validate_type_photo()
         self.__validate_name()
 
-    def save_photo(self):
+    def save_photo(self, photo_form=None):
         """Сохранение фото в файловую систему"""
-        photo = self.request.FILES[self.media_field]
+        if self.request is not None:
+            photo = self.request.FILES[self.media_field]
+        else:
+            photo = photo_form
 
         name = ''.join([datetime.now().strftime('%Y-%m-%d%H:%M:%S.%f'), photo.name.replace(' ', '')])
         self.absolute_path_photo = '{}/{}/{}'.format(self.path_to_static, self.PhotoDirectory,
-                                                name)
+                                                     name)
+
+
 
         self.path_photo = "{}/{}".format(self.PhotoDirectory, name)
         with open(self.absolute_path_photo, 'wb+') as destination:
@@ -63,14 +68,18 @@ class UploadManager:
                 destination.write(chunk)
         self.path_photo = "{}{}/{}".format(settings.STATIC_URL, self.PhotoDirectory, name)
 
-    def save_content(self):
-        """Создание модели и сохранение ее в бд"""
+    def save_content(self, photo_value=None, returned=False):
+        """Создание модели и сохранение ее в бд returned - Нужно ли возвращать получившуюся в бд запись"""
         request_data = self.request.POST
         try:
+
             self.save_photo()
             photo = PhotoContent.objects.create(user_id=self.request.user, name=request_data['name'],
                                                 description=request_data['description'], content=self.path_photo,
                                                 create_data=datetime.now(), content_path=self.absolute_path_photo)
             photo.save()
-        except Exception:
-            os.remove('{}/{}'.format(self.path_to_static, self.path_photo))
+            if returned:
+                return photo
+        except Exception as error:
+            logger.error(error)
+            os.remove(self.absolute_path_photo)

@@ -24,9 +24,9 @@ function ShowApproved(response){
             tablePhoto.empty();
             for (let i = 0; i < data.length; i++) {
                 let buttonCellRemove = $('<td>');
-                let buttonRemove = $('<button class="btn btn-outline-dark">').text('Удалить');
+                let buttonRemove = $('<button class="btn btn-danger">').text('Удалить');
                 let buttonCellChange = $('<td>');
-                let buttonChange = $('<button class="btn btn-outline-dark">').text('Изменить');
+                let buttonChange = $('<button class="btn btn-danger">').text('Изменить');
                 buttonCellRemove.append(buttonRemove)
                 buttonCellChange.append(buttonChange)
                 let row = $('<tr>');
@@ -42,6 +42,13 @@ function ShowApproved(response){
                 row.append(buttonCellChange)
 
 
+                buttonChange.click(function()
+                {
+                    let id = data[i].id
+                    window.location.href = `change/${id}`
+                })
+
+
                 buttonRemove.click(function () {
                     fetch('delete', {
                         method: 'DELETE',
@@ -54,12 +61,11 @@ function ShowApproved(response){
                     })
                     .then(function(response) {
                         if (response.ok) {
-                            console.log('Работает')
                             $(document).ready(function () {
                                 let radioValue = $('input[name="vbtn-radio"]:checked').val();
                                 console.log(radioValue)
                                 $.ajax({
-                                    url: '/account/profile/filterUserPhoto/',
+                                    url: '/profile/filterUserPhoto/',
                                     data: {'filter_value': radioValue},
                                     method: 'post',
                                     dataType: 'json',
@@ -93,7 +99,69 @@ function ShowApproved(response){
             }
 
 
+function Rejected(response){
+  let data = response.data;
+  tablePhoto.empty();
+  for(let i = 0; i<data.length; i++){
+      console.log(data[i])
+    let row = $('<tr>');
+    let buttonCellCancel = $('<td>');
+    let buttonCancel = $('<button class="btn btn-danger">').text('Отменить удаление');
+    buttonCellCancel.append(buttonCancel);
+    row.append($('<td class="text-center">').text(data[i].name));
+    console.log("Работает?")
+    let imgCell = $('<td class="text-center">')
+    let img = $('<img src="" alt="Иди правь че сидишь?" class="text-center">');
+    img.attr('src', 'data:image/png;base64,' + data[i].media);
+    imgCell.append(img);
+    row.append(imgCell);
+    row.append($('<td>').text(data[i].description));
+    row.append($('<td>').text(data[i].created_data));
+    row.append(buttonCellCancel)
 
+    buttonCancel.click(function () {
+                          fetch('cancel', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken,
+                            'X-SessionId': sessionid
+                        },
+                        body: JSON.stringify({id: data[i].id})
+                    })
+                    .then(function(response) {
+                        if (response.ok) {
+                            $(document).ready(function () {
+                                let radioValue = $('input[name="vbtn-radio"]:checked').val();
+                                console.log(radioValue)
+                                $.ajax({
+                                    url: '/profile/filterUserPhoto/',
+                                    data: {'filter_value': radioValue},
+                                    method: 'post',
+                                    dataType: 'json',
+                                    headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+                                    success: function (response){
+                                        Rejected(response)
+                                    }
+                                });
+                            });
+                          return true;
+                        } else {
+                          throw new Error('Ошибка запроса: ' + response.status);
+                        }
+                      })
+                      .then(function(result) {
+                        console.log(result);
+                      })
+                      .catch(function(error) {
+                        console.error(error);
+                      });
+
+                });
+    tablePhoto.append(row)
+    }
+
+}
 
 
 
@@ -119,7 +187,7 @@ function Request(response, radioValue) {
 $(document).ready(function () {
     let radioValue = $('input[name="vbtn-radio"]:checked').val();
     $.ajax({
-        url: '/account/profile/filterUserPhoto/',
+        url: '/profile/filterUserPhoto/',
         data: {'filter_value': radioValue},
         method: 'post',
         dataType: 'json',
@@ -135,17 +203,20 @@ $(document).ready(function () {
         let radioValue = $('input[name="vbtn-radio"]:checked').val();
         console.log(radioValue);
     $.ajax({
-        url: '/account/profile/filterUserPhoto/',
+        url: '/profile/filterUserPhoto/',
         data: {'filter_value': radioValue},
         method: 'post',
         dataType: 'json',
         headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
         success: function (response){
             if(radioValue == 1){
-                ShowApproved(response)
+                ShowApproved(response);
+            }
+            else if(radioValue == -1){
+                Rejected(response);
             }
             else{
-                Request(response)
+                Request(response);
             }
 
         }

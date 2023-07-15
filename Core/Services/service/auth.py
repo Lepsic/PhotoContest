@@ -36,7 +36,7 @@ class ServiceCreationUser:
     def SaveUser(self):
         user = CustomUser.objects.create_user(username=self.validate_data['username'],
                                               password=self.validate_data['pas1'],
-                                              last_name=self.validate_data['last_name'])
+                                              first_name=self.validate_data['name'])
         user.save()
 
     def validate_all(self):

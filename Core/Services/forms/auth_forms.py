@@ -7,10 +7,8 @@ class UserCreationsForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.service = ServiceCreationUser(form=self)
 
-    username = forms.CharField(max_length=40)
-    name = forms.CharField(max_length=100)
-    first_name = forms.CharField(max_length=100)
-    last_name = forms.CharField(max_length=100, required=False)
+    username = forms.CharField(max_length=40, label='Имя пользователя')
+    name = forms.CharField(max_length=100, label='Имя')
     pas1 = forms.CharField(max_length=40)
     pas2 = forms.CharField(max_length=40)
 
