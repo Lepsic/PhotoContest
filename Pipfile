@@ -12,6 +12,7 @@ django-imagekit = "*"
 pillow = "*"
 django-crispy-forms = "*"
 crispy-bootstrap4 = "*"
+loguru = "*"
 
 [dev-packages]
 
