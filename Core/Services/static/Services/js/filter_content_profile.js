@@ -103,13 +103,11 @@ function Rejected(response){
   let data = response.data;
   tablePhoto.empty();
   for(let i = 0; i<data.length; i++){
-      console.log(data[i])
     let row = $('<tr>');
     let buttonCellCancel = $('<td>');
     let buttonCancel = $('<button class="btn btn-danger">').text('Отменить удаление');
     buttonCellCancel.append(buttonCancel);
     row.append($('<td class="text-center">').text(data[i].name));
-    console.log("Работает?")
     let imgCell = $('<td class="text-center">')
     let img = $('<img src="" alt="Иди правь че сидишь?" class="text-center">');
     img.attr('src', 'data:image/png;base64,' + data[i].media);
@@ -120,7 +118,7 @@ function Rejected(response){
     row.append(buttonCellCancel)
 
     buttonCancel.click(function () {
-                          fetch('cancel', {
+                          fetch('canceldelete/', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

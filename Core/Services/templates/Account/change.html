@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    {% load crispy_forms_tags %}
+    {% load crispy_forms_filters %}
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <title>Изменение фото: {{ form_source.name.value }}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'Services/Css/profile.css' %}">
+    <style>
+	body {
+   	   background: #382f2f;
+	   color: #fff;
+   }
+   </style>
+</head>
+<body>
+   <form method="post" enctype="multipart/form-data">
+       {% csrf_token %}
+    <table>
+        <tr>
+            <td><label for="{{ form_source.name.id_for_label }}"><b>Название</b></label></td>
+            <td>{{ form_source.name }}</td>
+        </tr>
+        <tr>
+            <td><label for="{{ form_source.media.id_for_label }}"><img src={{ photo }} alt="Картинка"></label></td>
+            <td>{{ form_source.media }}</td>
+        </tr>
+        <tr>
+            <td><label for="{{ form_source.description.id_for_label }}"><b>Описание</b></label></td>
+            <td>{{ form_source.description }}</td>
+        </tr>
+    </table>
+    <button type="submit" class="btn btn-primary ">Отправить</button>
+</form>
+
+</body>

@@ -53,11 +53,7 @@ def delete_photo(request):
         return HttpResponse(status=200)
 
 
-@login_required()
-def get_change_photo(request):
 
-    response = {}
-    return JsonResponse(response)
 
 
 class ChangePhotoView(View):
@@ -85,4 +81,17 @@ class ChangePhotoView(View):
             return render(request, 'Account/change.html', {'form': form})
 
 
+@login_required()
+def cancel_delete(request):
+    photo_id = json.loads(request.body.decode('UTF-8')).get('id')
+    user = request.user
+    photo = PhotoContent.objects.get(pk=photo_id)
+    if photo.user_id == user:
+        photo.status = 1
+        photo.save()
+        return HttpResponse(request, status=200)
+    else:
+        from loguru import logger
+        logger.error("Редактируемое фото не является фото, опубликовнное пользоваетлем,, отправившим запрос")
+        return HttpResponse(request, status=404)
 

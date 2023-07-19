@@ -11,6 +11,7 @@ urlpatterns = [
     path('filterUserPhoto/', view.a_filter_content),
     path('delete/', view.delete_photo),
     path('change/<int:id>', view.ChangePhotoView.as_view(), name='change'),
+    path('canceldelete/', view.cancel_delete, name='cancel delete')
 
 ]
 
