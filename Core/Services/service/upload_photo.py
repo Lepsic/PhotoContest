@@ -4,6 +4,7 @@ from ..models import PhotoContent
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.conf import settings
 from datetime import datetime
+from decouple import config
 
 
 class UploadManager:
@@ -18,7 +19,7 @@ class UploadManager:
         self.form = form
 
         # получать из переменной окружения
-        self.path_to_static = '/home/lepsic/SaltAndPapperMentorLearn/PhotoContest/Core/Services/static'
+        self.path_to_static = config('PHOTO_PATH')
 
         self.validate_data = None
         self.photo = None

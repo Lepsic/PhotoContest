@@ -13,6 +13,7 @@ pillow = "*"
 django-crispy-forms = "*"
 crispy-bootstrap4 = "*"
 loguru = "*"
+python-decouple = "*"
 
 [dev-packages]
 
