@@ -119,7 +119,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-STATIC_ROOT = 'static/'
+STATIC_ROOT = config('STATIC_ROOT',default='static/')
 STATIC_URL = config('STATIC_URL', default='/static/')
 
 # Default primary key field type
@@ -135,4 +135,4 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-LOGIN_REDIRECT_URL = "/account/profile/"
+LOGIN_REDIRECT_URL = "/profile/"
