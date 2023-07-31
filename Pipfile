@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+djangorestframework = "*"
+psycopg2 = "*"
+django-service-objects = "*"
+django-imagekit = "*"
+pillow = "*"
+django-crispy-forms = "*"
+crispy-bootstrap4 = "*"
+loguru = "*"
+python-decouple = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
+python_full_version = "3.10.6"
