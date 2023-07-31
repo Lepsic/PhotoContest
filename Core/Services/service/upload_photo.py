@@ -9,7 +9,7 @@ from decouple import config
 
 class UploadManager:
     content_type = (['image/png',
-                    'image/jpeg',
+                     'image/jpeg',
                      ])
     media_field = 'media'
     PhotoDirectory = 'Services/img'
@@ -41,9 +41,9 @@ class UploadManager:
         """Валидация типа данных"""
         photo_type = self.request.FILES['media'].content_type
         print(type(self.request.FILES['media']))
-        if isinstance(self.request.FILES['media'], InMemoryUploadedFile ) or isinstance(self.request.FILES['media'],
-                                                                                        TemporaryUploadedFile):
-            if photo_type in self.content_type:
+        if isinstance(self.request.FILES['media'], InMemoryUploadedFile) or isinstance(self.request.FILES['media'],
+                                                                                       TemporaryUploadedFile):
+            if photo_type not in self.content_type:
                 self.form.add_error('media', 'Недопустимый тип файла. Файл должен быть форматом jpg или png')
         else:
             self.form.add_error('media', 'Недопустимый тип файла. Файл должен быть форматом jpg или png')
@@ -63,8 +63,6 @@ class UploadManager:
         name = ''.join([datetime.now().strftime('%Y-%m-%d%H:%M:%S.%f'), photo.name.replace(' ', '')])
         self.absolute_path_photo = '{}/{}/{}'.format(self.path_to_static, self.PhotoDirectory,
                                                      name)
-
-
 
         self.path_photo = "{}/{}".format(self.PhotoDirectory, name)
         with open(self.absolute_path_photo, 'wb+') as destination:
