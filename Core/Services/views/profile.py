@@ -16,7 +16,6 @@ login_url = '/authentication/login/'
 @login_required(login_url=login_url)
 def base_account(request):
     """Базовая страница профиля"""
-    print(request.user.is_authenticated)
     if not request.user.is_authenticated:
         return redirect('/authentication/login/?next=/profile/')
     context = {'username': request.user.username}

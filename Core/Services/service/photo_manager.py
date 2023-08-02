@@ -14,7 +14,8 @@ from django.db.models import Q
 class PhotoManager:
     """Класс для взаимодействия с картинками"""
 
-    ACTION_TO_RESIZE = {'profile': (220, 135)}
+    ACTION_TO_RESIZE = {'profile_view': (220, 135),
+                        }
 
     def __init__(self, request=None):
         self.request = request
@@ -29,9 +30,9 @@ class PhotoManager:
         if self.user is None:
             self.user = requsest.user
 
-    def _resize(self, photo, resize_action_type=None):
+    def _resize(self, photo, resize_action_type):
         img = Image.open(photo.content_path)
-        img_resized = img.resize(self.ACTION_TO_RESIZE['profile'])
+        img_resized = img.resize(self.ACTION_TO_RESIZE[resize_action_type])
         buffered = BytesIO()
         img_resized.save(buffered, format='png')
         img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
@@ -49,22 +50,23 @@ class PhotoManager:
             logger.error("Не корректное значение filter_value из filter_content_profile.js")
             logger.info(type_filter)
         if type_filter == "None":
-            return self.__create_response_dictionary_filtration(photos=photos)
+            return self.__create_response_dictionary_filtration(photos=photos, resize_action_type='profile_view')
         else:
             if type_filter == 0:
                 photos = PhotoContent.objects.filter(Q(status=type_filter) | Q(status=-2), user_id=self.user)
-                return self.__create_response_dictionary_filtration(photos)
+                return self.__create_response_dictionary_filtration(photos, resize_action_type='profile_view')
 
             photos = PhotoContent.objects.filter(status=type_filter, user_id=self.user)
-            return self.__create_response_dictionary_filtration(photos)
+            return self.__create_response_dictionary_filtration(photos,resize_action_type='profile_view')
 
-    def __create_response_dictionary_filtration(self, photos):
+    def __create_response_dictionary_filtration(self, photos, resize_action_type):
         """Создает словарь который отдает в запрос фильтрации"""
         response = {'data': []}
         for photo in photos:
             if photo.status != -100:
                 response['data'].append(
-                    {'name': photo.name, 'media': self._resize(photo=photo), 'created_data': photo.create_data,
+                    {'name': photo.name, 'media': self._resize(photo=photo, resize_action_type=resize_action_type),
+                     'created_data': photo.create_data,
                      'description': photo.description, 'id': photo.pk})
         return response
 
@@ -78,7 +80,6 @@ class PhotoManager:
         """Полное удаление фото из бд и из файловой системы"""
         os.remove(photo.content_path)
         photo.delete()
-        print("удалилась по идее", type(photo))
 
     def create_change_photo(self):
         response = {}
@@ -104,7 +105,8 @@ class ChangePhotoManager(PhotoManager):
     def creation_form(self):
         """Создание исходной формы по данным бд"""
         photo = self.photo
-        file = ''.join(['data:image/png;base64,', PhotoManager._resize(self, photo=photo)])
+        file = ''.join(['data:image/png;base64,',
+                        PhotoManager._resize(self, photo=photo, resize_action_type='profile_view')])
         initial = {'name': photo.name, 'description': photo.description}
         form = change_form.ChangePhoto(initial=initial)
         return {'form': form, 'file': file}
@@ -137,11 +139,9 @@ class ChangePhotoManager(PhotoManager):
                         change = PhotoChange.objects.get(id_source=self.photo)
 
                         legacy_update_photo = change.id_update
-                        print(legacy_update_photo)
                         change.id_update = photo_created
                         change.save()
                         self._all_delete_photo(legacy_update_photo)
-                        print("Сюда не идем уже получается?")
                 photo_created.status = -100
                 photo_created.save()
 
