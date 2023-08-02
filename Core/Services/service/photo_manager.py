@@ -1,6 +1,7 @@
 import os
 
-from ..models import PhotoContent
+from ..models import PhotoContent, Likes
+from .content_manager import ContentManager
 import base64
 from PIL import Image
 from io import BytesIO
@@ -9,15 +10,19 @@ from ..forms import change_form
 from ..models import PhotoChange
 from .upload_photo import UploadManager
 from django.db.models import Q
+from django.core.exceptions import FieldError
+
 
 
 class PhotoManager:
     """Класс для взаимодействия с картинками"""
 
     ACTION_TO_RESIZE = {'profile_view': (220, 135),
+                        'main_pages_view': (1280, 720),
                         }
 
     def __init__(self, request=None):
+        self.ContentManager = ContentManager
         self.request = request
         if request is None:
             self.user = None
@@ -30,15 +35,7 @@ class PhotoManager:
         if self.user is None:
             self.user = requsest.user
 
-    def _resize(self, photo, resize_action_type):
-        img = Image.open(photo.content_path)
-        img_resized = img.resize(self.ACTION_TO_RESIZE[resize_action_type])
-        buffered = BytesIO()
-        img_resized.save(buffered, format='png')
-        img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-        return img_base64
-
-    def filter_on_profile(self):
+    def generate_photo_dictionary_on_profile(self):
         """Генерация словаря по фильтру"""
 
         type_filter = self.request.POST.get('filter_value')
@@ -50,24 +47,53 @@ class PhotoManager:
             logger.error("Не корректное значение filter_value из filter_content_profile.js")
             logger.info(type_filter)
         if type_filter == "None":
-            return self.__create_response_dictionary_filtration(photos=photos, resize_action_type='profile_view')
+            return self.__create_response_dictionary(photos=photos, resize_action_type='profile_view')
         else:
             if type_filter == 0:
                 photos = PhotoContent.objects.filter(Q(status=type_filter) | Q(status=-2), user_id=self.user)
-                return self.__create_response_dictionary_filtration(photos, resize_action_type='profile_view')
+                return self.__create_response_dictionary(photos, resize_action_type='profile_view')
 
             photos = PhotoContent.objects.filter(status=type_filter, user_id=self.user)
-            return self.__create_response_dictionary_filtration(photos,resize_action_type='profile_view')
+            return self.__create_response_dictionary(photos, resize_action_type='profile_view')
 
-    def __create_response_dictionary_filtration(self, photos, resize_action_type):
-        """Создает словарь который отдает в запрос фильтрации"""
+    def generate_photo_dictionary_on_main_page(self):
+        sort_type = self.request.POST.get('sort_type')
+        try:
+            photos = PhotoContent.objects.filter(status=1).order_by(sort_type)
+            response = self.__create_response_dictionary(photos=photos, resize_action_type='main_pages_view')
+            if self.request.user is not None:
+                for photo in response['data']:
+                    if Likes.objects.filter(photo_id=photo['id'], user_id=self.request.user).exists():
+                        photo.update({'like_exist': 'True'})
+                    else:
+                        photo.update({'like_exist': 'False'})
+            for photo in response['data']:
+                like_count = Likes.objects.filter(photo_id=photo['id']).count()
+                comment_count = self.ContentManager.get_count_comments_by_photo(photo_id=photo['id'])
+                photo.update({'like_count': str(like_count)})
+                photo.update({'comment_count': str(comment_count)})
+        except FieldError as error:
+            logger.error(error)
+            logger.error('Попытка провести сортировку по несуществующему полю')
+
+    def _resize(self, photo, resize_action_type):
+        img = Image.open(photo.content_path)
+        img_resized = img.resize(self.ACTION_TO_RESIZE[resize_action_type])
+        buffered = BytesIO()
+        img_resized.save(buffered, format='png')
+        img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+        return img_base64
+
+    def __create_response_dictionary(self, photos, resize_action_type):
+        """Создает словарь response с фотками"""
         response = {'data': []}
         for photo in photos:
             if photo.status != -100:
                 response['data'].append(
                     {'name': photo.name, 'media': self._resize(photo=photo, resize_action_type=resize_action_type),
                      'created_data': photo.create_data,
-                     'description': photo.description, 'id': photo.pk})
+                     'description': photo.description, 'id': photo.pk,
+                     'user': photo.user_id})
         return response
 
     def delete_photo(self, body):
@@ -80,12 +106,6 @@ class PhotoManager:
         """Полное удаление фото из бд и из файловой системы"""
         os.remove(photo.content_path)
         photo.delete()
-
-    def create_change_photo(self):
-        response = {}
-        update_photo = PhotoContent.objects.filter(Q(user_id=self.user) | Q(status=-2))
-        for photo in update_photo:
-            response.update()
 
 
 class ChangePhotoManager(PhotoManager):

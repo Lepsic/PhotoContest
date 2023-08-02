@@ -26,7 +26,7 @@ def base_account(request):
 @login_required(login_url=login_url)
 def a_filter_content(request):
     manager = PhotoManager(request=request)
-    response = manager.filter_on_profile()
+    response = manager.generate_phtoto_dictionary_on_profile()
     return JsonResponse(response)
 
 
