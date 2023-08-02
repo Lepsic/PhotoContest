@@ -10,25 +10,28 @@ from django.views import View
 from ..service.photo_manager import PhotoManager, ChangePhotoManager
 from ..forms.change_form import ChangePhoto
 
+login_url = '/authentication/login/'
 
 
-@login_required()
+@login_required(login_url=login_url)
 def base_account(request):
     """Базовая страница профиля"""
-
+    print(request.user.is_authenticated)
+    if not request.user.is_authenticated:
+        return redirect('/authentication/login/?next=/profile/')
     context = {'username': request.user.username}
 
     return render(request, 'Account/base.html', context=context)
 
 
-@login_required()
+@login_required(login_url=login_url)
 def a_filter_content(request):
     manager = PhotoManager(request=request)
     response = manager.filter_on_profile()
     return JsonResponse(response)
 
 
-@login_required()
+@login_required(login_url=login_url)
 def upload_photo(request):
     """Загрузка фото на сервер"""
     if request.method == 'POST':
@@ -44,7 +47,7 @@ def upload_photo(request):
     return render(request, 'Account/upload.html', {'form': form})
 
 
-@login_required()
+@login_required(login_url=login_url)
 def delete_photo(request):
     if request.method == 'DELETE':
         manager = PhotoManager(request)
@@ -53,15 +56,12 @@ def delete_photo(request):
         return HttpResponse(status=200)
 
 
-
-
-
 class ChangePhotoView(View):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.manager = ChangePhotoManager()
 
-    @method_decorator(login_required)
+    @method_decorator(login_required(login_url=login_url))
     def get(self, request, id):
         self.manager.set_request(request)
         self.manager.set_id_change(id)
@@ -69,7 +69,7 @@ class ChangePhotoView(View):
         return render(request, 'Account/change.html', context={'form_source': data['form'],
                                                                'photo': data['file']})
 
-    @method_decorator(login_required)
+    @method_decorator(login_required(login_url=login_url))
     def post(self, request, id):
         self.manager.set_id_change(id)
         self.manager.set_request(request)
@@ -81,7 +81,7 @@ class ChangePhotoView(View):
             return render(request, 'Account/change.html', {'form': form})
 
 
-@login_required()
+@login_required(login_url=login_url)
 def cancel_delete(request):
     photo_id = json.loads(request.body.decode('UTF-8')).get('id')
     user = request.user
@@ -94,4 +94,3 @@ def cancel_delete(request):
         from loguru import logger
         logger.error("Редактируемое фото не является фото, опубликовнное пользоваетлем,, отправившим запрос")
         return HttpResponse(request, status=404)
-

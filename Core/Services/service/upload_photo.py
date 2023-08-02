@@ -1,7 +1,7 @@
 import os
 from loguru import logger
 from ..models import PhotoContent
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 from django.conf import settings
 from datetime import datetime
 from decouple import config
@@ -9,6 +9,7 @@ from decouple import config
 
 class UploadManager:
     content_type = (['image/png',
+                     'image/jpeg',
                      ])
     media_field = 'media'
     PhotoDirectory = 'Services/img'
@@ -39,8 +40,10 @@ class UploadManager:
     def __validate_type_photo(self):
         """Валидация типа данных"""
         photo_type = self.request.FILES['media'].content_type
-        if isinstance(self.request.FILES['media'], InMemoryUploadedFile):
-            if photo_type != self.content_type[0]:
+        print(type(self.request.FILES['media']))
+        if isinstance(self.request.FILES['media'], InMemoryUploadedFile) or isinstance(self.request.FILES['media'],
+                                                                                       TemporaryUploadedFile):
+            if photo_type not in self.content_type:
                 self.form.add_error('media', 'Недопустимый тип файла. Файл должен быть форматом jpg или png')
         else:
             self.form.add_error('media', 'Недопустимый тип файла. Файл должен быть форматом jpg или png')
@@ -60,8 +63,6 @@ class UploadManager:
         name = ''.join([datetime.now().strftime('%Y-%m-%d%H:%M:%S.%f'), photo.name.replace(' ', '')])
         self.absolute_path_photo = '{}/{}/{}'.format(self.path_to_static, self.PhotoDirectory,
                                                      name)
-
-
 
         self.path_photo = "{}/{}".format(self.PhotoDirectory, name)
         with open(self.absolute_path_photo, 'wb+') as destination:
