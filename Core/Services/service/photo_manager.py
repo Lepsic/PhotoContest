@@ -9,7 +9,7 @@ from loguru import logger
 from ..forms import change_form
 from ..models import PhotoChange
 from .upload_photo import UploadManager
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.core.exceptions import FieldError
 
 
@@ -36,7 +36,7 @@ class PhotoManager:
             self.user = requsest.user
 
     def generate_photo_dictionary_on_profile(self):
-        """Генерация словаря по фильтру"""
+        """Генерация словаря по фильтру(для профиля)"""
 
         type_filter = self.request.POST.get('filter_value')
         photos = PhotoContent.objects.filter(user_id=self.user)
@@ -57,24 +57,24 @@ class PhotoManager:
             return self.__create_response_dictionary(photos, resize_action_type='profile_view')
 
     def generate_photo_dictionary_on_main_page(self):
+        """Генерация словаря по фильтру для главной страницы"""
         sort_type = self.request.POST.get('sort_type')
-        try:
-            photos = PhotoContent.objects.filter(status=1).order_by(sort_type)
-            response = self.__create_response_dictionary(photos=photos, resize_action_type='main_pages_view')
-            if self.request.user is not None:
-                for photo in response['data']:
-                    if Likes.objects.filter(photo_id=photo['id'], user_id=self.request.user).exists():
-                        photo.update({'like_exist': 'True'})
-                    else:
-                        photo.update({'like_exist': 'False'})
+        #photos = PhotoContent.objects.filter(status=1).order_by(sort_type)
+        photos = self.__sort_photo_main_pages(sort_type)
+        response = self.__create_response_dictionary(photos=photos, resize_action_type='main_pages_view')
+        if self.request.user is not None:
             for photo in response['data']:
-                like_count = Likes.objects.filter(photo_id=photo['id']).count()
-                comment_count = self.ContentManager.get_count_comments_by_photo(photo_id=photo['id'])
-                photo.update({'like_count': str(like_count)})
-                photo.update({'comment_count': str(comment_count)})
-        except FieldError as error:
-            logger.error(error)
-            logger.error('Попытка провести сортировку по несуществующему полю')
+                if Likes.objects.filter(photo_id=photo['id'], user_id=self.request.user).exists():
+                    photo.update({'like_exist': 'True'})
+                else:
+                    photo.update({'like_exist': 'False'})
+        for photo in response['data']:
+            like_count = Likes.objects.filter(photo_id=photo['id']).count()
+            comment_count = self.ContentManager.get_count_comments_by_photo(photo_id=photo['id'])
+            photo.update({'like_count': str(like_count)})
+            photo.update({'comment_count': str(comment_count)})
+            return response
+
 
     def _resize(self, photo, resize_action_type):
         img = Image.open(photo.content_path)
@@ -93,7 +93,7 @@ class PhotoManager:
                     {'name': photo.name, 'media': self._resize(photo=photo, resize_action_type=resize_action_type),
                      'created_data': photo.create_data,
                      'description': photo.description, 'id': photo.pk,
-                     'user': photo.user_id})
+                     'user': photo.user_id.id})
         return response
 
     def delete_photo(self, body):
@@ -106,6 +106,14 @@ class PhotoManager:
         """Полное удаление фото из бд и из файловой системы"""
         os.remove(photo.content_path)
         photo.delete()
+
+    def __sort_photo_main_pages(self, sort_type):
+        if sort_type == 'create_data':
+            photo = PhotoContent.objects.filter(status=1).order_by('create_data')
+            return photo
+        if sort_type == 'count_likes':
+            photo = PhotoContent.objects.annotate(likes_count=Count('likes')).order_by('-like_count')
+            return photo
 
 
 class ChangePhotoManager(PhotoManager):
@@ -154,7 +162,7 @@ class ChangePhotoManager(PhotoManager):
                 change = PhotoChange(id_source=self.photo, id_update=photo_created)
                 try:
                     change.save()
-                except:
+                except Exception:
                     if PhotoChange.objects.get(id_source=self.photo):
                         change = PhotoChange.objects.get(id_source=self.photo)
 

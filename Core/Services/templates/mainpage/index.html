@@ -10,18 +10,19 @@
     {% load static %}
 </head>
 <body>
+    <h5>Сортировка по:</h5>
     <div class="btn-group btn-group-justified" role="group" aria-label="Basic radio toggle button group">
-        <input type="radio" class="btn-check" name="radioBtn" id="radio1" autocomplete="off" checked>
-        <label class="btn btn-outline-primary" for="radio1">Кнопка 1</label>
+        <input type="radio" class="btn-check" name="radioBtn" id="radio1" autocomplete="off" value="create_data" checked>
+        <label class="btn btn-outline-primary" for="radio1">Дата добавления</label>
 
-        <input type="radio" class="btn-check" name="radioBtn" id="radio2" autocomplete="off">
-        <label class="btn btn-outline-primary" for="radio2">Кнопка 2</label>
+        <input type="radio" class="btn-check" name="radioBtn" id="radio2" value="count_likes" autocomplete="off">
+        <label class="btn btn-outline-primary" for="radio2">Лайки</label>
 
-        <input type="radio" class="btn-check" name="radioBtn" id="radio3" autocomplete="off">
-        <label class="btn btn-outline-primary" for="radio3">Кнопка 3</label>
-</div>
+        <input type="radio" class="btn-check" name="radioBtn" id="radio3" value="count_comments" autocomplete="off">
+        <label class="btn btn-outline-primary" for="radio3">Комменатрии</label>
+    </div>
     <div class="container"></div>
     <!--<link rel="stylesheet" href="styles.css"> -->
-    <script src={% static "Services/js/main-page/render.js" %}></script>
+    <script type="module" src={% static "Services/js/main-page/get_photo.js" %}></script>
 </body>
 </html>

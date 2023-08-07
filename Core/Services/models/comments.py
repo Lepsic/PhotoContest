@@ -11,4 +11,3 @@ class Comments(models.Model):
     parent_id_image = models.ForeignKey('PhotoContent', on_delete=models.CASCADE)
     parent_id_comments = models.ForeignKey('Comments', on_delete=models.DO_NOTHING, blank=False, default=None)
 
-""""""

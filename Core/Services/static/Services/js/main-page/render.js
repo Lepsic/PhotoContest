@@ -1,5 +1,21 @@
 // Функция для создания элемента с заданным тегом и классами
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    let cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      let cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
 
+let csrftoken = getCookie('csrftoken');
+let sessionid = getCookie('sessionid');
 
 function createElement(tag, classNames) {
     const element = document.createElement(tag);
@@ -7,9 +23,36 @@ function createElement(tag, classNames) {
     return element;
 }
 
+
 // Функция для обработки лайка фотографии
 function likePhoto(photoId) {
     // Отправка запроса на сервер для обработки лайка фотографии с идентификатором photoId
+    let count;
+
+    $.ajax({
+        url: '/content/like/',
+        data: {'photo_id': photoId},
+        method: 'POST',
+        dataType: 'JSON',
+        headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+        success: function (response){
+            count = response.count_likes
+            let likeButton = document.getElementById('likeButton'+photoId);
+            if(likeButton.className === 'btn btn-primary'){
+                likeButton.className = 'btn btn-danger';
+                likeButton.textContent = 'Лайк ' + count
+                }
+            else{
+                likeButton.className = 'btn btn-primary';
+                likeButton.textContent = 'Лайк ' + count
+                }
+
+        }
+    })
+
+
+
+
 }
 
 // Функция для загрузки и отображения комментариев для фотографии
@@ -34,7 +77,7 @@ function generatePage(photos) {
         container.appendChild(card);
 
         const image = createElement('img', ['card-img-top']);
-        image.src = photo.image;
+        image.src = 'data:image/png;base64,' + photo.media;
         image.alt = 'Фотография';
         card.appendChild(image);
 
@@ -42,7 +85,7 @@ function generatePage(photos) {
         card.appendChild(cardBody);
 
         const title = createElement('h5', ['card-title']);
-        title.innerHTML = photo.title + "<br>Дата публикации: " + photo.data_created;
+        title.innerHTML = photo.name + "<br>Дата публикации: " + photo.created_data;
         cardBody.appendChild(title);
 
         const description = createElement('p', ['card-text']);
@@ -53,13 +96,25 @@ function generatePage(photos) {
         const buttonsWrapper = createElement('div', ['d-flex', 'justify-content-between']);
         cardBody.appendChild(buttonsWrapper);
 
-        const likeButton = createElement('button', ['btn', 'btn-primary']);
-        likeButton.textContent = 'Лайк ' + photo.count_likes ;
-        likeButton.addEventListener('click', () => likePhoto(photo.id));
-        buttonsWrapper.appendChild(likeButton);
+
+        if(photo.like_exist === "False"){
+            let likeButton = createElement('button', ['btn', 'btn-primary']);
+            likeButton.textContent = 'Лайк ' + photo.like_count ;
+            likeButton.addEventListener('click', () => likePhoto(photo.id));
+            likeButton.setAttribute('id', 'likeButton' + photo.id);
+            buttonsWrapper.appendChild(likeButton);
+        }
+        else{
+            let likeButton = createElement('button', ['btn', 'btn-danger']);
+            likeButton.textContent = 'Лайк ' + photo.like_count ;
+            likeButton.addEventListener('click', () => likePhoto(photo.id));
+            likeButton.setAttribute('id', 'likeButton' + photo.id);
+            buttonsWrapper.appendChild(likeButton);
+        }
+
 
         const commentsButton = createElement('button', ['btn', 'btn-secondary']);
-        commentsButton.textContent = 'Показать комментарии: ' +'('+ photo.count_comments + ')';
+        commentsButton.textContent = 'Показать комментарии: ' +'('+ photo.comment_count + ')';
         commentsButton.addEventListener('click', () => showComments(photo.id));
         buttonsWrapper.appendChild(commentsButton);
 
@@ -81,6 +136,8 @@ function generatePage(photos) {
 
 // Пример данных о фотографиях
 
+/*
+
 const photosData = [
     {
         id: 1,
@@ -94,13 +151,27 @@ const photosData = [
     {
         id: 2,
         image: 'path/to/image2.jpg',
-        title: 'Фотография 2',
+        name: 'Фотография 2',
         description: 'Описание фотографии 2',
-        count_likes: '25',
-        count_comments: '16',
-        data_created: '02.08.2023'
+        like_count: '25',
+        comment_count: '16',
+        created_data: '02.08.2023'
+    },
+    {
+        name: "сыбака",
+        media: "iVBORw0KGgoAAAANSUhEUgAA…qxKKHHdAAAAAElFTkSuQmCC",
+        created_data: "2023-08-02",
+        description: "",
+        id: 1,
+        user:1,
+        like_exist: 'False',
+        like_count: 0,
+        comment_count:0
     }
 ];
 
-// Генерация страницы с фотографиями
+Генерация страницы с фотографиями
 generatePage(photosData);
+*/
+
+export default generatePage;
