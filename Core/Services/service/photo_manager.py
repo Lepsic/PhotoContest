@@ -59,10 +59,9 @@ class PhotoManager:
     def generate_photo_dictionary_on_main_page(self):
         """Генерация словаря по фильтру для главной страницы"""
         sort_type = self.request.POST.get('sort_type')
-        #photos = PhotoContent.objects.filter(status=1).order_by(sort_type)
         photos = self.__sort_photo_main_pages(sort_type)
         response = self.__create_response_dictionary(photos=photos, resize_action_type='main_pages_view')
-        if self.request.user is not None:
+        if self.request.user.is_authenticated:
             for photo in response['data']:
                 if Likes.objects.filter(photo_id=photo['id'], user_id=self.request.user).exists():
                     photo.update({'like_exist': 'True'})
@@ -73,7 +72,8 @@ class PhotoManager:
             comment_count = self.ContentManager.get_count_comments_by_photo(photo_id=photo['id'])
             photo.update({'like_count': str(like_count)})
             photo.update({'comment_count': str(comment_count)})
-            return response
+            photo.update({'like_exist': 'False'})
+        return response
 
 
     def _resize(self, photo, resize_action_type):

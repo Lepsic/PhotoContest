@@ -9,5 +9,4 @@ class Comments(models.Model):
     type_choices = [(0, 'Photo'), (1, 'Comments')]
     entity_type = models.SmallIntegerField(choices=type_choices)
     parent_id_image = models.ForeignKey('PhotoContent', on_delete=models.CASCADE)
-    parent_id_comments = models.ForeignKey('Comments', on_delete=models.DO_NOTHING, blank=False, default=None)
-
+    parent_id_comments = models.ForeignKey('Comments', on_delete=models.DO_NOTHING, null=True)

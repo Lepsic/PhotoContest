@@ -19,9 +19,12 @@ let sessionid = getCookie('sessionid');
 
 function createElement(tag, classNames) {
     const element = document.createElement(tag);
-    element.classList.add(...classNames);
+    if(classNames){
+        element.classList.add(...classNames);
+    }
     return element;
 }
+
 
 
 // Функция для обработки лайка фотографии
@@ -55,11 +58,249 @@ function likePhoto(photoId) {
 
 }
 
+
+
+
 // Функция для загрузки и отображения комментариев для фотографии
-function showComments(photoId) {
-    // Отправка запроса на сервер для получения комментариев для фотографии с идентификатором photoId
-    // После получения ответа от сервера, создание элементов комментариев и их добавление в соответствующий блок
+function postComments(postData){
+    $.ajax({
+        url: '/content/comment/post/',
+        data: postData,
+        method: 'POST',
+        dataType: 'json',
+        headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+        success: function (response){
+            console.log(postData);
+        }
+    })
 }
+
+function initButtonWrapper(buttonWrapper){
+
+}
+
+
+
+
+
+
+
+function addButtonWrapper(element, userId){
+    let buttonsWrapper = createElement('div', ['button-wrapper']);
+    console.log(String(userId));
+    console.log(element.getAttribute('userid'))
+    if (String(userId) === element.getAttribute('userid')){
+              let commentsButtonResponse = createElement('button', ['btn', 'btn-secondary', 'btn-sm',
+              'btn-comment-wrapper']);
+              let commentButtonEdit = createElement('button', ['btn', 'btn-secondary', 'btn-sm',
+                  'btn-comment-wrapper']);
+              let commentButtonDelete = createElement('button', ['btn', 'btn-secondary', 'btn-sm',
+                  'btn-comment-wrapper']);
+              commentButtonDelete.textContent = 'Удалить';
+              commentButtonEdit.textContent = 'Изменить';
+              commentsButtonResponse.textContent = 'Ответить';
+              commentsButtonResponse.id = 'buttonResponse';
+              commentButtonEdit.id = 'buttonEdit';
+              commentButtonDelete.id = 'buttonDelete';
+
+
+              buttonsWrapper.append(commentsButtonResponse);
+              buttonsWrapper.append(commentButtonDelete);
+              buttonsWrapper.append(commentButtonEdit);
+        }
+        else{
+            let commentsButtonResponse = createElement('button', ['btn', 'btn-secondary', 'btn-sm',
+              'btn-comment-wrapper']);
+            commentsButtonResponse.textContent = 'Ответить';
+            buttonsWrapper.append(commentsButtonResponse);
+        }
+        element.appendChild(buttonsWrapper);
+
+        return buttonsWrapper;
+}
+
+function showComments(photoId, userId) {
+    let commentsWrapper = document.getElementById('comments-' + photoId);
+    let commentsBlock = createElement('div',['comments', 'wrapper']);
+    commentsWrapper.appendChild(commentsBlock);
+    commentsBlock.innerHTML = '';
+    let commentsData;
+    $.ajax({
+        url: '/content/comment/get/',
+        dataType: 'json',
+        data: {'photoId': photoId},
+        method: 'POST',
+        headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+        success: function (response){
+            commentsData = response.data;
+            let baseComments = commentsData.filter(comment => !comment.child_comment);
+            let childComments = commentsData.filter(comment => comment.child_comment);
+            /*Создание формы для создания комментария*/
+            let commentsForm = createElement('form');
+            let input = createElement('input', ['form-control']);
+            input.type = 'text';
+            input.name = 'Комменатрий';
+            input.placeholder = 'Написать комментарий';
+
+
+            let submitButton = createElement('button', ['btn','btn-primary', 'btn-sm', 'btn-submit-wrapper']);
+            submitButton.type='submit';
+            submitButton.textContent = 'Отправить';
+
+            commentsForm.append(input);
+            commentsForm.append(submitButton);
+
+
+
+            baseComments.forEach(comment => {
+                let commentElement = createElement('div', ['comment']);
+                commentElement.id = comment.id;
+                commentElement.setAttribute('userId', comment.user_id);
+                commentElement.innerHTML = '<span class="username">' + comment.username + '</span>: ' + comment.content;
+                commentsBlock.appendChild(commentElement);
+
+                let childCommentsBlock = createElement('div', ['child-comments']);
+                childCommentsBlock.id = comment.id
+                commentsBlock.appendChild(childCommentsBlock);
+
+                let childCommentsForParent = childComments.filter(childComment =>
+                    childComment.parent_id === comment.id);
+                let childCommentsForParentRender = childCommentsForParent.slice(0,2);
+                childCommentsForParentRender.forEach(childComment => {
+                    let childCommentElement = createElement('div', ['child-comment']);
+                    childCommentElement.innerHTML = '<span class="username">' + childComment.username + '</span>: ' +
+                        childComment.content;
+                    childCommentElement.setAttribute('userId', childComment.user_id);
+                    let childButtonWrapper = addButtonWrapper(childCommentElement, userId, photoId);
+                    childCommentsBlock.appendChild(childCommentElement);
+                });
+                if (childCommentsForParent.length > 2) {
+                    let showMoreButton = createElement('button', ['btn', 'btn-link']);
+                    showMoreButton.textContent = 'Показать еще ' +
+                        (childCommentsForParent.length-2) + ' комментариев';
+                    showMoreButton.addEventListener('click', () => showAllChildComments(childComments,
+                        childCommentsBlock, userId));
+                    childCommentsBlock.appendChild(showMoreButton);
+                }
+                let buttonWrapper = addButtonWrapper(commentElement, userId, photoId);
+                buttonWrapper.addEventListener('click', function (event){
+                    if(event.target.classList.contains('btn')){
+                        if(event.target.id === 'buttonResponse'){
+                            let commentsFormResponse = createElement('form');
+                            let inputResponse = createElement('input', ['form-control']);
+                            inputResponse.type = 'text';
+                            inputResponse.placeholder = 'Ответ';
+                            inputResponse.name = 'Ответ';
+                            let submitButtonResponse = createElement('button',
+                                ['btn','btn-primary', 'btn-sm', 'btn-submit-wrapper']);
+                            submitButtonResponse.type = 'submit';
+                            submitButtonResponse.textContent = 'Ответить';
+                            commentsFormResponse.append(inputResponse);
+                            commentsFormResponse.append(submitButtonResponse);
+                            let parentElement = buttonWrapper.parentNode;
+                            parentElement.append(commentsFormResponse);
+                            submitButtonResponse.addEventListener('click', function (event){
+                                event.preventDefault();
+                                let postDataResponse = {
+                                    content: inputResponse.value,
+                                    parent_id_comment: true,
+                                    image_id: photoId,
+                                    parent_id: buttonWrapper.parentNode.id
+                                }
+                                postComments(postDataResponse);
+                                 $.ajax({
+                                     url: '/profile/user/data/get/',
+                                     dataType: 'json',
+                                     method: 'GET',
+                                     headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+                                     success: function (response){
+                                        let childCommentElement = createElement('div', ['child-comment']);
+                                        childCommentElement.setAttribute('userid', response.id)
+                                        childCommentElement.innerHTML = '<span class="username">' +
+                                            response.username  + '</span>: ' +
+                                        postDataResponse.content;
+                                        childCommentsBlock.appendChild(childCommentElement);
+                                        addButtonWrapper(childCommentElement, response.id, photoId);
+                                        parentElement.removeChild(commentsFormResponse);
+                                 }
+                                 })
+                            })
+                        }else if(event.target.id === 'buttonDelete'){
+                            let parentElement = buttonWrapper.parentNode
+                            let deleteData = {
+                                comment_id: parentElement.id
+                            }
+                            $.ajax({
+                                url: 'content/comment/delete/',
+                                dataType: 'json',
+                                data: deleteData,
+                                method: 'POST',
+                                headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+                                success: function (response){
+                                    console.log('Delete complited');
+                                }
+                                
+                                }
+                            )
+                        }
+
+                    }
+                })
+
+            });
+            commentsWrapper.appendChild(commentsForm);
+            submitButton.addEventListener('click', function (event){
+                event.preventDefault();
+                let inputData = {
+                    image_id: photoId,
+                    parent_id_comment: false,
+                    content: input.value
+                }
+                if(inputData.content === ""){
+                    input.placeholder = 'Комментарий не может быть пустым';
+                    return 0;
+                }
+
+                postComments(inputData);
+
+                let commentElement = createElement('div', ['comment']);
+                $.ajax({
+                        url: '/profile/user/data/get/',
+                        dataType: 'json',
+                        method: 'GET',
+                        headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+                        success: function (response){
+                            commentElement.id = 'AddedUser';
+                            commentElement.setAttribute('userId', response.id)
+                            commentElement.innerHTML = '<span class="username">' + response.username + '</span>: '
+                                + inputData.content;
+                            commentsBlock.appendChild(commentElement);
+                            addButtonWrapper(commentElement, response.id, photoId);
+                            }
+                        }
+                    )
+
+            })
+            commentsWrapper.style.display = 'block';
+}
+
+        })
+    }
+
+
+
+function showAllChildComments(childComments, childCommentsBlock, userId) {
+    childCommentsBlock.innerHTML = '';
+    childComments.forEach(comment =>{
+        let childCommentElement = createElement('div', ['child-comment'])
+        childCommentElement.setAttribute('userId', comment.user_id);
+        childCommentElement.setAttribute('id', comment.id);
+        childCommentElement.innerHTML = '<span class="username">' + comment.username + '</span>: ' + comment.content;
+        childCommentsBlock.appendChild(childCommentElement);
+        addButtonWrapper(childCommentElement, userId);
+    })
+}
+
 
 // Функция для генерации страницы с фотографиями
 function generatePage(photos) {
@@ -115,7 +356,18 @@ function generatePage(photos) {
 
         const commentsButton = createElement('button', ['btn', 'btn-secondary']);
         commentsButton.textContent = 'Показать комментарии: ' +'('+ photo.comment_count + ')';
-        commentsButton.addEventListener('click', () => showComments(photo.id));
+        //commentsButton.addEventListener('click', () => showComments(photo.id));
+        commentsButton.addEventListener('click', function (){
+            $.ajax({
+                url: 'profile/user/data/get/',
+                dataType: 'json',
+                method: 'GET',
+                success: function (response){
+                    showComments(photo.id, response.id);
+                }
+
+            })
+        })
         buttonsWrapper.appendChild(commentsButton);
 
         const commentsBlock = createElement('div', []);
@@ -136,42 +388,18 @@ function generatePage(photos) {
 
 // Пример данных о фотографиях
 
-/*
-
-const photosData = [
+const commentsData = [
     {
-        id: 1,
-        image: 'path/to/image1.jpg',
-        title: 'Фотография 1',
-        description: 'Описание фотографии 1',
-        count_likes: '11',
-        count_comments: '8',
-        data_created: '02.08.2023'
-    },
-    {
-        id: 2,
-        image: 'path/to/image2.jpg',
-        name: 'Фотография 2',
-        description: 'Описание фотографии 2',
-        like_count: '25',
-        comment_count: '16',
-        created_data: '02.08.2023'
-    },
-    {
-        name: "сыбака",
-        media: "iVBORw0KGgoAAAANSUhEUgAA…qxKKHHdAAAAAElFTkSuQmCC",
-        created_data: "2023-08-02",
-        description: "",
-        id: 1,
-        user:1,
-        like_exist: 'False',
-        like_count: 0,
-        comment_count:0
+        id :1,
+        username: 'user',
+        content: 'Some Text',
+        count_child_comments: 0,
+        child_comment: false, //существуют ли дочерние комментарии если они существуют, то данные о первых двух
     }
-];
 
-Генерация страницы с фотографиями
-generatePage(photosData);
-*/
+    ]
+
+
+
 
 export default generatePage;

@@ -93,3 +93,18 @@ def cancel_delete(request):
         from loguru import logger
         logger.error("Редактируемое фото не является фото, опубликовнное пользоваетлем,, отправившим запрос")
         return HttpResponse(request, status=404)
+
+
+def get_user_data(request):
+    user = request.user
+    if user.is_authenticated:
+        response = {"id": user.pk, 'username': user.username}
+    else:
+        response = {'NotAuthenticated'}
+    return JsonResponse(response)
+
+
+
+
+
+
