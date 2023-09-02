@@ -67,12 +67,14 @@ class PhotoManager:
                     photo.update({'like_exist': 'True'})
                 else:
                     photo.update({'like_exist': 'False'})
+        else:
+            for photo in response['data']:
+                photo.update({'like_exist': 'False'})
         for photo in response['data']:
             like_count = Likes.objects.filter(photo_id=photo['id']).count()
             comment_count = self.ContentManager.get_count_comments_by_photo(photo_id=photo['id'])
             photo.update({'like_count': str(like_count)})
             photo.update({'comment_count': str(comment_count)})
-            photo.update({'like_exist': 'False'})
         return response
 
 
@@ -112,8 +114,12 @@ class PhotoManager:
             photo = PhotoContent.objects.filter(status=1).order_by('create_data')
             return photo
         if sort_type == 'count_likes':
-            photo = PhotoContent.objects.annotate(likes_count=Count('likes')).order_by('-like_count')
+            photo = PhotoContent.objects.annotate(likes_count=Count('likes')).order_by('-likes_count').filter(status=1)
             return photo
+        if sort_type == 'count_comments':
+            photo = PhotoContent.objects.annotate(comments_count=Count('comments')).order_by('-comments_count').filter(status=1)
+            return photo
+
 
 
 class ChangePhotoManager(PhotoManager):

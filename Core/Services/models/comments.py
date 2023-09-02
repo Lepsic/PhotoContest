@@ -10,3 +10,4 @@ class Comments(models.Model):
     entity_type = models.SmallIntegerField(choices=type_choices)
     parent_id_image = models.ForeignKey('PhotoContent', on_delete=models.CASCADE)
     parent_id_comments = models.ForeignKey('Comments', on_delete=models.DO_NOTHING, null=True)
+    create_time = models.DateField(blank=True)

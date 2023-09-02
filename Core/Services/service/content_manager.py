@@ -1,6 +1,9 @@
+import datetime
+
 from ..models import Comments
 from ..models import Likes
 from ..models import PhotoContent
+from loguru import logger
 
 
 class ContentManager:
@@ -69,10 +72,42 @@ class ContentManager:
         if created_data['parent_id_comment'] == 'true':
             comment = Comments.objects.create(user_id=created_data['user'], content=created_data['content'],
                                               parent_id_image_id=created_data['image_id'], entity_type=1,
-                                              parent_id_comments_id=created_data['parent_id'])
+                                              parent_id_comments_id=created_data['parent_id'],
+                                              create_time=datetime.datetime.now())
         else:
             comment = Comments.objects.create(user_id=created_data['user'], content=created_data['content'],
-                                              parent_id_image_id=created_data['image_id'], entity_type=0)
+                                              parent_id_image_id=created_data['image_id'], entity_type=0,
+                                              create_time=datetime.datetime.now())
         comment.save()
 
+    @staticmethod
+    def delete_comment(comment_id):
+        comment_id = int(comment_id)
+        comment = Comments.objects.filter(id=comment_id)
+        if Comments.objects.filter(id=comment_id).exists():
+            if Comments.objects.filter(entity_type=1, parent_id_comments_id=comment_id).exists():
+                return False
+            else:
+                print('этот блок выполняется')
+                comment.delete()
+                return True
+        else:
+            logger.error('Комментария с таким id не существует')
 
+    @staticmethod
+    def get_content_comment(comment_id):
+        comment_id = int(comment_id)
+        comment = Comments.objects.get(id=comment_id)
+        return comment.content
+
+    @staticmethod
+    def edit_comment_content(comment_id, edit_text):
+        comment_id = int(comment_id)
+        print()
+        comment = Comments.objects.get(id=comment_id)
+        if edit_text != '':
+            comment.content = edit_text
+            comment.save()
+            return True
+        else:
+            return ContentManager.delete_comment(comment_id)

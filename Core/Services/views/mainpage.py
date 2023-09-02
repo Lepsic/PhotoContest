@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
 from ..service.photo_manager import PhotoManager
 from ..service.content_manager import ContentManager
+from django.http import HttpResponseBadRequest
 
 login_url = '/authentication/login/'
 
@@ -44,10 +45,39 @@ def post_comment(request):
 
 
 
-@login_required(login_url=login_url)
 def get_comment_by_photo(request):
     """Получение комментариев по id фото"""
     content_manager = ContentManager
     pk = request.POST.get('photoId')
     response = content_manager.get_comments_dictionary(pk)
     return JsonResponse(response)
+
+
+@login_required(login_url=login_url)
+def delete_comment(request):
+    content_manager = ContentManager
+    comment_id = request.POST.get('comment_id')
+
+    if content_manager.delete_comment(comment_id):
+        return JsonResponse({})
+    else:
+        return HttpResponseBadRequest('The comment is not available for deletion')
+
+
+def get_content_comment(request):
+    comment_id = request.POST.get('comment_id')
+    content_manager = ContentManager
+    content = content_manager.get_content_comment(comment_id)
+    return JsonResponse({'commentContent': content})
+
+
+@login_required(login_url=login_url)
+def edit_content_comment(request):
+    comment_id = request.POST.get('comment_id')
+    edit_text = request.POST.get('editText')
+    content_manager = ContentManager
+    status = content_manager.edit_comment_content(comment_id, edit_text)
+    if status:
+        return JsonResponse({'username': request.user.username})
+    else:
+        return HttpResponseBadRequest('this comment cannot be changed to an empty str')

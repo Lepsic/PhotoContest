@@ -11,16 +11,24 @@
     <link rel="stylesheet" type="text/css" href="{% static 'Services/Css/main-page_min.css' %}">
 </head>
 <body>
+    <div class="header">
     <h5>Сортировка по:</h5>
-    <div class="btn-group btn-group-justified" role="group" aria-label="Basic radio toggle button group">
-        <input type="radio" class="btn-check" name="radioBtn" id="radio1" autocomplete="off" value="create_data" checked>
-        <label class="btn btn-outline-primary" for="radio1">Дата добавления</label>
+        <div class="btn-group btn-group-justified" role="group" aria-label="Basic radio toggle button group">
+            <input type="radio" class="btn-check" name="radioBtn" id="radio1" autocomplete="off" value="create_data" checked>
+            <label class="btn btn-outline-primary" for="radio1">Дата добавления</label>
 
-        <input type="radio" class="btn-check" name="radioBtn" id="radio2" value="count_likes" autocomplete="off">
-        <label class="btn btn-outline-primary" for="radio2">Лайки</label>
+            <input type="radio" class="btn-check" name="radioBtn" id="radio2" value="count_likes" autocomplete="off">
+            <label class="btn btn-outline-primary" for="radio2">Лайки</label>
 
-        <input type="radio" class="btn-check" name="radioBtn" id="radio3" value="count_comments" autocomplete="off">
-        <label class="btn btn-outline-primary" for="radio3">Комменатрии</label>
+            <input type="radio" class="btn-check" name="radioBtn" id="radio3" value="count_comments" autocomplete="off">
+            <label class="btn btn-outline-primary" for="radio3">Комменатрии</label>
+            <div class="input-group search-container">
+                <span class="input-group-text">Поиск</span>
+                <input type="text" class="form-control search-control" placeholder="Введите поисковый запрос">
+                <button type="submit" class="btn btn-primary">Найти</button>
+            </div>
+    </div>
+
     </div>
     <div class="container"></div>
     <!--<link rel="stylesheet" href="styles.css"> -->

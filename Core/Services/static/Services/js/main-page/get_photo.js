@@ -23,12 +23,13 @@ function getCookie(name) {
 function get_photo_sorted(sort_data){
     $.ajax({
     url: '/content/photo/',
-    data: {'sort_type': 'create_data'},
+    data: {'sort_type': sort_data},
     method: 'POST',
     dataType: 'json',
     headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
     success: function (response){
         generatePages(response.data)
+        console.log(response.data);
     }
 
 });
@@ -36,12 +37,13 @@ function get_photo_sorted(sort_data){
 
 
 $(document).ready(function (){
-    get_photo_sorted('created_data')
+    get_photo_sorted('create_data')
 })
 
 
 $('.btn-group-justified').on('change', '.btn-check', function (event) {
     let radioValue = $('input[name="radioBtn"]:checked').val();
+    console.log(radioValue);
     container.innerHTML="";
     get_photo_sorted(radioValue)
 });
