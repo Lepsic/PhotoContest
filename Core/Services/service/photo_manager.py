@@ -11,6 +11,7 @@ from ..models import PhotoChange
 from .upload_photo import UploadManager
 from django.db.models import Q, Count
 from django.core.exceptions import FieldError
+from ..tasks import schedule_delete_photo
 
 
 
@@ -101,9 +102,14 @@ class PhotoManager:
 
     def delete_photo(self, body):
         """Фиктивное удаление(просто меняет статус)"""
-        photo = PhotoContent.objects.get(user_id=self.user, pk=body.get('id'))
-        photo.status = -1
-        photo.save()
+        try:
+            photo_id = body.get('id')
+            photo = PhotoContent.objects.get(user_id=self.user, pk=body.get('id'))
+            photo.status = -1
+            photo.save()
+            schedule_delete_photo.delay(photo_id)
+        except Exception:
+            logger.error('Фото не существует')
 
     def _all_delete_photo(self, photo):
         """Полное удаление фото из бд и из файловой системы"""
