@@ -4,6 +4,8 @@ import generatePages from './render.js';
 let csrftoken = getCookie('csrftoken');
 let sessionid = getCookie('sessionid');
 let container = document.querySelector('.container');
+let searchButton = document.getElementById('searchButton');
+let searchInput = document.getElementById('searchInput');
 
 function getCookie(name) {
   let cookieValue = null;
@@ -47,3 +49,21 @@ $('.btn-group-justified').on('change', '.btn-check', function (event) {
     container.innerHTML="";
     get_photo_sorted(radioValue)
 });
+
+
+searchButton.addEventListener('click',function (event) {
+    event.preventDefault();
+    console.log(searchInput.value);
+    $.ajax({
+        url: '/content/photo/search/',
+        dataType: 'json',
+        method: 'POST',
+        data: {'searchData': searchInput.value},
+        headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+        success: function (response){
+            container.innerHTML="";
+            generatePages(response.data)
+        }
+    })
+    searchInput.value = '';
+})

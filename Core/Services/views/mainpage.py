@@ -81,3 +81,11 @@ def edit_content_comment(request):
         return JsonResponse({'username': request.user.username})
     else:
         return HttpResponseBadRequest('this comment cannot be changed to an empty str')
+
+
+def search_on_photo(request):
+    content_manager = ContentManager
+    photo_manager = PhotoManager(request=request)
+    photos = content_manager.search_photo(request.POST.get('searchData'))
+    response = photo_manager.generate_photo_dictionary_on_main_page(photos=photos)
+    return JsonResponse(response)

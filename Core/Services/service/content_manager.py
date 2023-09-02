@@ -111,3 +111,16 @@ class ContentManager:
             return True
         else:
             return ContentManager.delete_comment(comment_id)
+
+    @staticmethod
+    def search_photo(word):
+        photos = PhotoContent.objects.filter(status=1)
+        search_occurrences = []
+        for photo in photos:
+            search_list = [photo.user_id.username, photo.description, photo.name]
+            for field in search_list:
+                if word in field:
+                    search_occurrences.append(photo)
+                    break
+
+        return search_occurrences

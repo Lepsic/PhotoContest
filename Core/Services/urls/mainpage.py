@@ -10,6 +10,7 @@ urlpatterns = [
     path('content/comment/get/', mainpage.get_comment_by_photo),
     path('content/comment/delete/', mainpage.delete_comment),
     path('content/comment/text/', mainpage.get_content_comment),
-    path('content/comment/edit/', mainpage.edit_content_comment)
+    path('content/comment/edit/', mainpage.edit_content_comment),
+    path('content/photo/search/', mainpage.search_on_photo)
 
 ]

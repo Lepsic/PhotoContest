@@ -56,10 +56,11 @@ class PhotoManager:
             photos = PhotoContent.objects.filter(status=type_filter, user_id=self.user)
             return self.__create_response_dictionary(photos, resize_action_type='profile_view')
 
-    def generate_photo_dictionary_on_main_page(self):
+    def generate_photo_dictionary_on_main_page(self, photos=None):
         """Генерация словаря по фильтру для главной страницы"""
-        sort_type = self.request.POST.get('sort_type')
-        photos = self.__sort_photo_main_pages(sort_type)
+        if photos is None:
+            sort_type = self.request.POST.get('sort_type')
+            photos = self.__sort_photo_main_pages(sort_type)
         response = self.__create_response_dictionary(photos=photos, resize_action_type='main_pages_view')
         if self.request.user.is_authenticated:
             for photo in response['data']:
