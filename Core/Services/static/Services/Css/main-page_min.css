@@ -1,0 +1,40 @@
+.comment {
+  margin-bottom: 10px;
+  background-color: #f2f2f2;
+  padding: 10px;
+}
+
+.child-comment {
+  margin-left: 20px;
+  background-color: #e6e6e6;
+  padding: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+.btn-submit-wrapper{
+  margin-left: 830px;
+  margin-bottom: 3px;
+  margin-top: 5px;
+  padding-left: 1px;
+  border-left-width: 4px;
+}
+
+.form-control{
+  height: 150px;
+  width: 920px;
+}
+.search-control{
+  height: auto;
+  width: auto;
+}
+.search-container{
+  left: 1000px;
+  height: auto;
+  width: auto;
+
+}
+
+.btn-comment-wrapper{
+  margin-left: 5px;
+  --bs-btn-font-size: 0.7rem;
+}
