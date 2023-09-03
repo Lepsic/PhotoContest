@@ -86,8 +86,7 @@ def cancel_delete(request):
     user = request.user
     photo = PhotoContent.objects.get(pk=photo_id)
     if photo.user_id == user:
-        photo.status = 1
-        photo.save()
+        photo.cancel_delete()
         return HttpResponse(request, status=200)
     else:
         from loguru import logger

@@ -16,6 +16,7 @@ loguru = "*"
 python-decouple = "*"
 celery = "*"
 redis = "*"
+django-fsm = "*"
 
 [dev-packages]
 

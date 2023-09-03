@@ -12,6 +12,7 @@ from .upload_photo import UploadManager
 from django.db.models import Q, Count
 from django.core.exceptions import FieldError
 from ..tasks import schedule_delete_photo
+from ..models import PhotoStateEnum
 
 
 
@@ -51,10 +52,16 @@ class PhotoManager:
             return self.__create_response_dictionary(photos=photos, resize_action_type='profile_view')
         else:
             if type_filter == 0:
-                photos = PhotoContent.objects.filter(Q(status=type_filter) | Q(status=-2), user_id=self.user)
+                photos = PhotoContent.objects.filter(Q(state=PhotoStateEnum.WAIT_APPROVED) |
+                                                     Q(state=PhotoStateEnum.ON_EDIT), user_id=self.user)
                 return self.__create_response_dictionary(photos, resize_action_type='profile_view')
-
-            photos = PhotoContent.objects.filter(status=type_filter, user_id=self.user)
+            if type_filter == 1:
+                photos = PhotoContent.objects.filter(state=PhotoStateEnum.APPROVED, user_id=self.user)
+                return self.__create_response_dictionary(photos, resize_action_type='profile_view')
+            if type_filter == -1:
+                photos = PhotoContent.objects.filter(state=PhotoStateEnum.REJECTED, user_id=self.user)
+                return self.__create_response_dictionary(photos, resize_action_type='profile_view')
+            photos = PhotoContent.objects.filter(state=type_filter, user_id=self.user)
             return self.__create_response_dictionary(photos, resize_action_type='profile_view')
 
     def generate_photo_dictionary_on_main_page(self, photos=None):
@@ -92,7 +99,7 @@ class PhotoManager:
         """Создает словарь response с фотками"""
         response = {'data': []}
         for photo in photos:
-            if photo.status != -100:
+            if photo.state != PhotoStateEnum.DONT_SHOW:
                 response['data'].append(
                     {'name': photo.name, 'media': self._resize(photo=photo, resize_action_type=resize_action_type),
                      'created_data': photo.create_data,
@@ -105,11 +112,10 @@ class PhotoManager:
         try:
             photo_id = body.get('id')
             photo = PhotoContent.objects.get(user_id=self.user, pk=body.get('id'))
-            photo.status = -1
-            photo.save()
+            photo.initial_delete()
             schedule_delete_photo.delay(photo_id)
-        except Exception:
-            logger.error('Фото не существует')
+        except Exception as error:
+            logger.error(error)
 
     def _all_delete_photo(self, photo):
         """Полное удаление фото из бд и из файловой системы"""
@@ -118,13 +124,15 @@ class PhotoManager:
 
     def __sort_photo_main_pages(self, sort_type):
         if sort_type == 'create_data':
-            photo = PhotoContent.objects.filter(status=1).order_by('create_data')
+            photo = PhotoContent.objects.filter(state=PhotoStateEnum.APPROVED).order_by('create_data')
             return photo
         if sort_type == 'count_likes':
-            photo = PhotoContent.objects.annotate(likes_count=Count('likes')).order_by('-likes_count').filter(status=1)
+            photo = PhotoContent.objects.annotate(likes_count=Count('likes')).order_by('-likes_count').filter(
+                state=PhotoStateEnum.APPROVED)
             return photo
         if sort_type == 'count_comments':
-            photo = PhotoContent.objects.annotate(comments_count=Count('comments')).order_by('-comments_count').filter(status=1)
+            photo = PhotoContent.objects.annotate(comments_count=Count('comments')).order_by('-comments_count').filter(
+                state=PhotoStateEnum.APPROVED)
             return photo
 
 
