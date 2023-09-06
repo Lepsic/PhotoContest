@@ -9,7 +9,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     {% load static %}
     <link rel="stylesheet" type="text/css" href="{% static 'Services/Css/main-page_min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'Services/Css/notification.css' %}">
 </head>
+
 <body>
     <div class="header">
     <h5>Сортировка по:</h5>
@@ -27,12 +29,16 @@
                 <input type="text" id="searchInput" class="form-control search-control" placeholder="Введите поисковый запрос">
                 <button type="submit" id = "searchButton" class="btn btn-primary">Найти</button>
             </div>
-    </div>
+            </div>
+
 
     </div>
     <div class="container"></div>
     <!--<link rel="stylesheet" href="styles.css"> -->
     <script type="module" src={% static "Services/js/main-page/get_photo.js" %}></script>
-
+    <div id="notificationContainer">
+        <div id="notificationContent"></div>
+    </div>
+    <script src={% static "Services/js/notification.js" %}></script>
 </body>
 </html>

@@ -5,6 +5,7 @@ from ..service.photo_manager import PhotoManager
 from ..service.content_manager import ContentManager
 from django.http import HttpResponseBadRequest
 
+
 login_url = '/authentication/login/'
 
 
@@ -40,8 +41,8 @@ def post_comment(request):
     data = {'image_id': request.POST.get('image_id'), 'content': request.POST.get('content'), 'user': request.user,
             'parent_id_comment': request.POST.get('parent_id_comment'), 'parent_id': request.POST.get('parent_id')}
     content_manager = ContentManager
-    content_manager.post_comment(data)
-    return HttpResponse(status=200)
+    comment = content_manager.post_comment(data)
+    return JsonResponse({'comment_id': comment.id})
 
 
 
@@ -58,7 +59,7 @@ def delete_comment(request):
     content_manager = ContentManager
     comment_id = request.POST.get('comment_id')
 
-    if content_manager.delete_comment(comment_id):
+    if content_manager.delete_comment(comment_id, user=request.user):
         return JsonResponse({})
     else:
         return HttpResponseBadRequest('The comment is not available for deletion')
@@ -76,7 +77,7 @@ def edit_content_comment(request):
     comment_id = request.POST.get('comment_id')
     edit_text = request.POST.get('editText')
     content_manager = ContentManager
-    status = content_manager.edit_comment_content(comment_id, edit_text)
+    status = content_manager.edit_comment_content(comment_id, edit_text, user=request.user)
     if status:
         return JsonResponse({'username': request.user.username})
     else:
