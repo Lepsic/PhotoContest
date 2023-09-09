@@ -1,11 +1,9 @@
 import datetime
 
-from ..models import Comments
-from ..models import Likes
-from ..models import PhotoContent
 from loguru import logger
-from .notification import like_notification
-from .notification import comment_notification
+
+from ..models import Comments, Likes, PhotoContent
+from .notification import comment_notification, like_notification
 
 
 class ContentManager:

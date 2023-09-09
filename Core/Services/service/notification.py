@@ -1,5 +1,5 @@
-from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 
 def like_notification(like_id, action, user_id, work_username, like_count):

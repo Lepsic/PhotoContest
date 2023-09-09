@@ -1,14 +1,15 @@
 import json
-from django.utils.decorators import method_decorator
-from django.shortcuts import render, redirect
+
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django.utils.decorators import method_decorator
+from django.views import View
+
+from ..forms.change_form import ChangePhoto
 from ..forms.upload_photo_form import UploadPhoto
 from ..models import PhotoContent
-from django.conf import settings
-from django.views import View
-from ..service.photo_manager import PhotoManager, ChangePhotoManager
-from ..forms.change_form import ChangePhoto
+from ..service.photo_manager import ChangePhotoManager, PhotoManager
 
 login_url = '/authentication/login/'
 

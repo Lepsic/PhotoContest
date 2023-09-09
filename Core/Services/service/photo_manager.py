@@ -1,19 +1,16 @@
-import os
-
-from ..models import PhotoContent, Likes
-from .content_manager import ContentManager
 import base64
-from PIL import Image
+import os
 from io import BytesIO
-from loguru import logger
-from ..forms import change_form
-from ..models import PhotoChange
-from .upload_photo import UploadManager
-from django.db.models import Q, Count
-from django.core.exceptions import FieldError
-from ..tasks import schedule_delete_photo
-from ..models import PhotoStateEnum
 
+from django.db.models import Count, Q
+from loguru import logger
+from PIL import Image
+
+from ..forms import change_form
+from ..models import Likes, PhotoChange, PhotoContent, PhotoStateEnum
+from ..tasks import schedule_delete_photo
+from .content_manager import ContentManager
+from .upload_photo import UploadManager
 
 
 class PhotoManager:

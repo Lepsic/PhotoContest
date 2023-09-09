@@ -17,6 +17,7 @@ python-decouple = "*"
 celery = "*"
 redis = "*"
 django-fsm = "*"
+ruff = "*"
 
 [dev-packages]
 

@@ -1,6 +1,6 @@
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
 
+from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth.decorators import login_required
 
 

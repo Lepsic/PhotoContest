@@ -1,10 +1,12 @@
 import os
-from loguru import logger
-from ..models import PhotoContent
-from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
-from django.conf import settings
 from datetime import datetime
+
 from decouple import config
+from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
+from loguru import logger
+
+from ..models import PhotoContent
 
 
 class UploadManager:
@@ -60,14 +62,13 @@ class UploadManager:
             photo = photo_form
 
         name = ''.join([datetime.now().strftime('%Y-%m-%d%H:%M:%S.%f'), photo.name.replace(' ', '')])
-        self.absolute_path_photo = '{}/{}/{}'.format(self.path_to_static, self.PhotoDirectory,
-                                                     name)
+        self.absolute_path_photo = f'{self.path_to_static}/{self.PhotoDirectory}/{name}'
 
-        self.path_photo = "{}/{}".format(self.PhotoDirectory, name)
+        self.path_photo = f"{self.PhotoDirectory}/{name}"
         with open(self.absolute_path_photo, 'wb+') as destination:
             for chunk in photo.chunks():
                 destination.write(chunk)
-        self.path_photo = "{}{}/{}".format(settings.STATIC_URL, self.PhotoDirectory, name)
+        self.path_photo = f"{settings.STATIC_URL}{self.PhotoDirectory}/{name}"
 
     def save_content(self, photo_value=None, returned=False):
         """Создание модели и сохранение ее в бд returned - Нужно ли возвращать получившуюся в бд запись"""

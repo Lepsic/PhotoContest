@@ -2,7 +2,7 @@ from django.db import models
 from django_fsm import FSMIntegerField, transition
 
 
-class PhotoStateEnum(object):
+class PhotoStateEnum:
     WAIT_APPROVED = 0  # В ожидании публикации
     APPROVED = 1  # Опубликовано
     REJECTED = -1  # На удалении

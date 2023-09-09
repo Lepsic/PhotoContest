@@ -1,9 +1,8 @@
-import http
 
-from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.views import LogoutView as Logout
+from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+
 from ..forms import auth_forms
 
 

@@ -1,5 +1,6 @@
-from ..models.custom_user import CustomUser
 import re
+
+from ..models.custom_user import CustomUser
 
 
 class ServiceCreationUser:

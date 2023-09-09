@@ -9,11 +9,12 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/asgi/
 
 import os
 
-from django.core.asgi import get_asgi_application
-from channels.routing import ProtocolTypeRouter
-from Notification.routing import websockets_url
-from channels.security.websocket import AllowedHostsOriginValidator
 from channels.auth import AuthMiddlewareStack
+from channels.routing import ProtocolTypeRouter
+from channels.security.websocket import AllowedHostsOriginValidator
+from django.core.asgi import get_asgi_application
+
+from Notification.routing import websockets_url
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Core.settings')
 

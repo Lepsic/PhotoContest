@@ -1,10 +1,9 @@
-from django.shortcuts import render
-from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.decorators import login_required
-from ..service.photo_manager import PhotoManager
-from ..service.content_manager import ContentManager
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.shortcuts import render
 
+from ..service.content_manager import ContentManager
+from ..service.photo_manager import PhotoManager
 
 login_url = '/authentication/login/'
 
