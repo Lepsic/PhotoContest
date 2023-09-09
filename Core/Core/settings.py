@@ -30,6 +30,8 @@ ALLOWED_HOSTS = [config('HOST')]
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +43,9 @@ INSTALLED_APPS = [
     'bootstrap4',
     'crispy_forms',
     'crispy_bootstrap4',
+    'django_fsm',
+
+
 ]
 
 MIDDLEWARE = [
@@ -73,6 +78,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Core.wsgi.application'
+ASGI_APPLICATION = 'Core.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -86,6 +92,11 @@ DATABASES = {
         'HOST': config('DB_HOST'),
         'PORT': '',
     }
+}
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
 }
 
 # Password validation
@@ -136,3 +147,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap4"
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 LOGIN_REDIRECT_URL = "/profile/"
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379"

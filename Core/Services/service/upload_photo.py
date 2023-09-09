@@ -40,7 +40,6 @@ class UploadManager:
     def __validate_type_photo(self):
         """Валидация типа данных"""
         photo_type = self.request.FILES['media'].content_type
-        print(type(self.request.FILES['media']))
         if isinstance(self.request.FILES['media'], InMemoryUploadedFile) or isinstance(self.request.FILES['media'],
                                                                                        TemporaryUploadedFile):
             if photo_type not in self.content_type:

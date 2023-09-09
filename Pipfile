@@ -14,6 +14,9 @@ django-crispy-forms = "*"
 crispy-bootstrap4 = "*"
 loguru = "*"
 python-decouple = "*"
+celery = "*"
+redis = "*"
+django-fsm = "*"
 
 [dev-packages]
 
