@@ -41,8 +41,8 @@ def post_comment(request):
     data = {'image_id': request.POST.get('image_id'), 'content': request.POST.get('content'), 'user': request.user,
             'parent_id_comment': request.POST.get('parent_id_comment'), 'parent_id': request.POST.get('parent_id')}
     content_manager = ContentManager
-    comment = content_manager.post_comment(data)
-    return JsonResponse({'comment_id': comment.id})
+    response = content_manager.post_comment(data)
+    return JsonResponse(response)
 
 
 

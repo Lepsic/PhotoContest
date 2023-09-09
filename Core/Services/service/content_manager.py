@@ -74,21 +74,26 @@ class ContentManager:
 
     @staticmethod
     def post_comment(created_data):
-        photo = PhotoContent.objects.get(id=created_data['image_id'])
         if created_data['parent_id_comment'] == 'true':
+            photo = Comments.objects.get(id=created_data['parent_id']).parent_id_image
             comment = Comments.objects.create(user_id=created_data['user'], content=created_data['content'],
                                               parent_id_image_id=photo.id, entity_type=1,
                                               parent_id_comments_id=created_data['parent_id'],
                                               create_time=datetime.datetime.now())
         else:
+            photo = PhotoContent.objects.get(id=created_data['image_id'])
             comment = Comments.objects.create(user_id=created_data['user'], content=created_data['content'],
                                               parent_id_image_id=photo.id, entity_type=0,
                                               create_time=datetime.datetime.now())
         comment.save()
+        response = {'comment_id': comment.id}
+        if comment.entity_type == 1:
+            response.update({'comment_parent_id': comment.parent_id_comments.id})
+
         comment_notification(photo_id=photo.name, user_id=photo.user_id, action="CreatedComment",
                              work_username=created_data['user'].username,
                              comments_count=str(ContentManager.get_count_comments_by_photo(created_data['image_id'])))
-        return comment
+        return response
 
     @staticmethod
     def delete_comment(comment_id, user):

@@ -70,7 +70,7 @@ function postComments(postData){
         dataType: 'json',
         headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
         success: function (response){
-            console.log(postData);
+
         }
     })
 }
@@ -117,8 +117,10 @@ function addButtonWrapper(element, userId){
         return buttonsWrapper;
 }
 
-function createActionButtonWrapper(buttonWrapper, photoId, parent){
+function createActionButtonWrapper(buttonWrapper, photoId, parent_comment_id = null){
+
     buttonWrapper.addEventListener('click', function (event){
+
                     if(event.target.classList.contains('btn')){
                         if(event.target.id === 'buttonResponse'){
                             let commentsFormResponse = createElement('form');
@@ -142,35 +144,48 @@ function createActionButtonWrapper(buttonWrapper, photoId, parent){
                                     image_id: photoId,
                                     parent_id: buttonWrapper.parentNode.id
                                 }
-                                if(buttonWrapper.parentNode.className==="child-comment"){
+                                if(buttonWrapper.parentNode.className.includes("child-comment")){
                                     postDataResponse = {
                                         content: inputResponse.value,
                                         parent_id_comment: true,
                                         image_id: photoId,
-                                        parent_id: buttonWrapper.parentNode.parentNode.id
+                                        parent_id: buttonWrapper.parentNode.getAttribute('parent_comment_id')
+
                                     }
+                                    
                                 }
-                                console.log(postDataResponse);
-                                postComments(postDataResponse);
-                                 $.ajax({
+
+
+                                $.ajax({
+                                    url: '/content/comment/post/',
+                                    data: postDataResponse,
+                                    method: 'POST',
+                                    dataType: 'json',
+                                    headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+                                    success: function (responsePost){
+                                        let childCommentsBlock = createElement('div', ['child-comments']);
+                                        let commentBlock = buttonWrapper.parentNode.parentNode;
+                                        childCommentsBlock.id = "child-comments" + responsePost.comment_parent_id;
+                                        commentBlock.appendChild(childCommentsBlock);
+                                        childCommentsBlock.setAttribute("parent_comment_id",
+                                        postDataResponse.parent_id)
+
+                                        $.ajax({
                                      url: '/profile/user/data/get/',
                                      dataType: 'json',
                                      method: 'GET',
                                      headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
                                      success: function (response){
-                                        let childCommentElement = createElement('div', ['child-comment']);
-                                        childCommentElement.setAttribute('userid', response.id)
-                                        childCommentElement.innerHTML = '<span class="username">' +
-                                            response.username  + '</span>: ' +
-                                        postDataResponse.content;
-                                        let childCommentsBlock = buttonWrapper.parentNode.parentNode;
-                                        childCommentsBlock.appendChild(childCommentElement);
-                                        let createdButtonWrapper = addButtonWrapper(childCommentElement, response.id);
-                                        createActionButtonWrapper(createdButtonWrapper, photoId);
-                                        parentElement.removeChild(commentsFormResponse);
+                                         console.log(buttonWrapper.parentNode.parentNode);
+                                         buttonWrapper.parentNode.parentNode.parentNode.innerHTML ='';
+                                        showComments(photoId, response.id);
+
                                  }
                                  })
-                            })
+
+                                    }
+                                })
+                                  })
                         }else if(event.target.id === 'buttonDelete'){
                             let parentElement = buttonWrapper.parentNode
                             let deleteData = {
@@ -285,7 +300,7 @@ function showComments(photoId, userId) {
                 commentsBlock.appendChild(commentElement);
 
                 let childCommentsBlock = createElement('div', ['child-comments']);
-                childCommentsBlock.id = comment.id
+                childCommentsBlock.id = "child-comments" + comment.id;
                 commentsBlock.appendChild(childCommentsBlock);
 
                 let childCommentsForParent = childComments.filter(childComment =>
@@ -294,6 +309,7 @@ function showComments(photoId, userId) {
                 childCommentsForParentRender.forEach(childComment => {
                     let childCommentElement = createElement('div', ['child-comment']);
                     childCommentElement.id = childComment.id;
+                    childCommentElement.setAttribute('parent_comment_id', comment.id);
                     childCommentElement.innerHTML = '<span class="username">' + childComment.username + '</span>: ' +
                         childComment.content;
                     childCommentElement.setAttribute('userId', childComment.user_id);
@@ -328,25 +344,35 @@ function showComments(photoId, userId) {
                     return 0;
                 }
 
-                postComments(inputData);
-
-                let commentElement = createElement('div', ['comment']);
                 $.ajax({
-                        url: '/profile/user/data/get/',
-                        dataType: 'json',
-                        method: 'GET',
-                        headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
-                        success: function (response){
-                            commentElement.id = 'AddedUser';
-                            commentElement.setAttribute('userId', response.id)
-                            commentElement.innerHTML = '<span class="username">' + response.username + '</span>: '
-                                + inputData.content;
-                            commentsBlock.appendChild(commentElement);
-                            let buttonWrapper = addButtonWrapper(commentElement, response.id, photoId);
-                            createActionButtonWrapper(buttonWrapper);
-                            }
-                        }
+                    url: '/content/comment/post/',
+                    data: inputData,
+                    method: 'POST',
+                    dataType: 'json',
+                    headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+                    success: function (responsePost){
+                        let commentElement = createElement('div', ['comment']);
+                        $.ajax({
+                                url: '/profile/user/data/get/',
+                                dataType: 'json',
+                                method: 'GET',
+                                headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
+                                success: function (response){
+                                    commentElement.id = responsePost.comment_id;
+                                    commentElement.setAttribute('userId', response.id)
+                                    commentElement.innerHTML = '<span class="username">' + response.username + '</span>: '
+                                        + inputData.content;
+                                    commentsBlock.appendChild(commentElement);
+                                    let buttonWrapper = addButtonWrapper(commentElement, response.id, photoId);
+                                    createActionButtonWrapper(buttonWrapper, photoId);
+
+                                    }
+                                }
                     )
+                    }
+                })
+
+
 
             })
             commentsWrapper.style.display = 'block';
