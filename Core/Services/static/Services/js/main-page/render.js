@@ -109,6 +109,7 @@ function addButtonWrapper(element, userId){
         else{
             let commentsButtonResponse = createElement('button', ['btn', 'btn-secondary', 'btn-sm',
               'btn-comment-wrapper']);
+            commentsButtonResponse.id ='buttonResponse';
             commentsButtonResponse.textContent = 'Ответить';
             buttonsWrapper.append(commentsButtonResponse);
         }
