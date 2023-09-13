@@ -12,6 +12,8 @@ urlpatterns = [
     path('content/comment/delete/', mainpage.delete_comment),
     path('content/comment/text/', mainpage.get_content_comment),
     path('content/comment/edit/', mainpage.edit_content_comment),
-    path('content/photo/search/', mainpage.search_on_photo)
+    path('content/photo/search/', mainpage.search_on_photo),
+    path('<int:image_id>/', mainpage.redirect_photo_page),
+    path('<int:image_id>/content/', mainpage.generate_photo_page)
 
 ]

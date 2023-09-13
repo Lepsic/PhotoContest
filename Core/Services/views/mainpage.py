@@ -44,7 +44,6 @@ def post_comment(request):
     return JsonResponse(response)
 
 
-
 def get_comment_by_photo(request):
     """Получение комментариев по id фото"""
     content_manager = ContentManager
@@ -89,3 +88,14 @@ def search_on_photo(request):
     photos = content_manager.search_photo(request.POST.get('searchData'))
     response = photo_manager.generate_photo_dictionary_on_main_page(photos=photos)
     return JsonResponse(response)
+
+
+def generate_photo_page(request, image_id):
+    pk = image_id
+    photo_manager = PhotoManager(request)
+    response = photo_manager.generate_photo_dictionary_on_photocard(pk)
+    return JsonResponse(response)
+
+
+def redirect_photo_page(request, image_id):
+    return render(request, 'mainpage/photocard.html', context={'image_id': image_id})

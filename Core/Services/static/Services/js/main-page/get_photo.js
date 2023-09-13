@@ -31,7 +31,6 @@ function get_photo_sorted(sort_data){
     headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
     success: function (response){
         generatePages(response.data)
-        console.log(response.data);
     }
 
 });

@@ -66,9 +66,23 @@ class PhotoManager:
         photos = PhotoContent.objects.filter(state=PhotoStateEnum.WAIT_APPROVED)
         response = self._create_response_dictionary(photos, 'profile_view')
         return response
+
     def generate_photo_dictionary_on_rejected_stack(self):
         photos = PhotoContent.objects.filter(state=PhotoStateEnum.REJECTED)
         response = self._create_response_dictionary(photos, 'profile_view')
+        return response
+
+    def generate_photo_dictionary_on_photocard(self, image_id):
+        photo = PhotoContent.objects.get(id=image_id)
+        response = self._create_response_dictionary(photo, 'original')
+        if Likes.objects.filter(photo_id_id=image_id, user_id=self.request.user).exists():
+            response['data'][0].update({'like_exist': 'True'})
+        else:
+            response['data'][0].update({'like_exist': 'False'})
+        like_count = Likes.objects.filter(photo_id_id=image_id).count()
+        comment_count = self.ContentManager.get_count_comments_by_photo(photo_id=image_id)
+        response['data'][0].update({'like_count': str(like_count)})
+        response['data'][0].update({'comment_count': str(comment_count)})
         return response
 
     def generate_photo_dictionary_on_main_page(self, photos=None):
@@ -93,25 +107,39 @@ class PhotoManager:
             photo.update({'comment_count': str(comment_count)})
         return response
 
-
     def _resize(self, photo, resize_action_type):
         img = Image.open(photo.content_path)
-        img_resized = img.resize(self.ACTION_TO_RESIZE[resize_action_type])
-        buffered = BytesIO()
-        img_resized.save(buffered, format='png')
-        img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-        return img_base64
+        if resize_action_type != 'original':
+            img_resized = img.resize(self.ACTION_TO_RESIZE[resize_action_type])
+            buffered = BytesIO()
+            img_resized.save(buffered, format='png')
+            img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            return img_base64
+        else:
+            buffered = BytesIO()
+            img.save(buffered, format='png')
+            img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
+            return img_base64
+
 
     def _create_response_dictionary(self, photos, resize_action_type):
         """Создает словарь response с фотками"""
         response = {'data': []}
-        for photo in photos:
-            if photo.state != PhotoStateEnum.DONT_SHOW:
-                response['data'].append(
-                    {'name': photo.name, 'media': self._resize(photo=photo, resize_action_type=resize_action_type),
-                     'created_data': photo.create_data,
-                     'description': photo.description, 'id': photo.pk,
-                     'user': photo.user_id.id})
+        try:
+            for photo in photos:
+                if photo.state != PhotoStateEnum.DONT_SHOW:
+                    response['data'].append(
+                        {'name': photo.name, 'media': self._resize(photo=photo, resize_action_type=resize_action_type),
+                         'created_data': photo.create_data,
+                         'description': photo.description, 'id': photo.pk,
+                         'user': photo.user_id.id})
+        except TypeError:
+            photo = photos
+            response['data'].append(response['data'].append(
+                        {'name': photo.name, 'media': self._resize(photo=photo, resize_action_type=resize_action_type),
+                         'created_data': photo.create_data,
+                         'description': photo.description, 'id': photo.pk,
+                         'user': photo.user_id.id}))
         return response
 
     def delete_photo(self, body):
@@ -141,7 +169,6 @@ class PhotoManager:
             photo = PhotoContent.objects.annotate(comments_count=Count('comments')).order_by('-comments_count').filter(
                 state=PhotoStateEnum.APPROVED)
             return photo
-
 
 
 class ChangePhotoManager(PhotoManager):
@@ -207,7 +234,6 @@ class ChangePhotoManager(PhotoManager):
         k_values = {'user_id': user, 'name': form.cleaned_data['name'], 'description': form.cleaned_data['description']}
         return k_values
 
-
     def get_change_photo(self):
         resize_type = 'profile_view'
         update_photos = []
@@ -219,4 +245,3 @@ class ChangePhotoManager(PhotoManager):
             photo_source = PhotoChange.objects.get(id_update=photo['id']).id_source
             photo.update({'source_media': self._resize(photo_source, resize_type)})
         return response
-

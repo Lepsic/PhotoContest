@@ -25,7 +25,7 @@ function createElement(tag, classNames) {
     return element;
 }
 
-
+const baseURL = window.location.origin
 
 // Функция для обработки лайка фотографии
 function likePhoto(photoId) {
@@ -33,7 +33,7 @@ function likePhoto(photoId) {
     let count;
 
     $.ajax({
-        url: '/content/like/',
+        url:  '/content/like/',
         data: {'photo_id': photoId},
         method: 'POST',
         dataType: 'JSON',
@@ -64,7 +64,7 @@ function likePhoto(photoId) {
 // Функция для загрузки и отображения комментариев для фотографии
 function postComments(postData){
     $.ajax({
-        url: '/content/comment/post/',
+        url:   '/content/comment/post/',
         data: postData,
         method: 'POST',
         dataType: 'json',
@@ -158,7 +158,7 @@ function createActionButtonWrapper(buttonWrapper, photoId, parent_comment_id = n
 
 
                                 $.ajax({
-                                    url: '/content/comment/post/',
+                                    url:  '/content/comment/post/',
                                     data: postDataResponse,
                                     method: 'POST',
                                     dataType: 'json',
@@ -172,7 +172,7 @@ function createActionButtonWrapper(buttonWrapper, photoId, parent_comment_id = n
                                         postDataResponse.parent_id)
 
                                         $.ajax({
-                                     url: '/profile/user/data/get/',
+                                     url:  '/profile/user/data/get/',
                                      dataType: 'json',
                                      method: 'GET',
                                      headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
@@ -193,7 +193,7 @@ function createActionButtonWrapper(buttonWrapper, photoId, parent_comment_id = n
                                 comment_id: parentElement.id
                             }
                             $.ajax({
-                                url: 'content/comment/delete/',
+                                url:  '/content/comment/delete/',
                                 dataType: 'json',
                                 data: deleteData,
                                 method: 'POST',
@@ -214,7 +214,7 @@ function createActionButtonWrapper(buttonWrapper, photoId, parent_comment_id = n
                                 comment_id: parentElement.id
                             }
                             $.ajax({
-                                url: '/content/comment/text/',
+                                url:  '/content/comment/text/',
                                 dataType: 'json',
                                 method: 'POST',
                                 data: requestData,
@@ -237,7 +237,7 @@ function createActionButtonWrapper(buttonWrapper, photoId, parent_comment_id = n
                                     submitButton.addEventListener('click', function (event){
                                         event.preventDefault();
                                         $.ajax({
-                                            url: '/content/comment/edit/',
+                                            url:   '/content/comment/edit/',
                                             dataType: 'json',
                                             method: 'POST',
                                             data: {'comment_id': parentElement.id, 'editText': inputChange.value},
@@ -267,7 +267,7 @@ function showComments(photoId, userId) {
     commentsBlock.innerHTML = '';
     let commentsData;
     $.ajax({
-        url: '/content/comment/get/',
+        url:  '/content/comment/get/',
         dataType: 'json',
         data: {'photoId': photoId},
         method: 'POST',
@@ -404,11 +404,6 @@ function generatePage(photos) {
     const container = document.querySelector('.container');
 
 
-    // Создание заголовка
-    const heading = createElement('h1', ['mt-5']);
-    heading.textContent = 'Конкурс фотографий';
-    container.appendChild(heading);
-
     // Создание карточек фотографий
     photos.forEach(photo => {
         const card = createElement('div', ['card', 'mb-3']);
@@ -418,6 +413,9 @@ function generatePage(photos) {
         image.src = 'data:image/png;base64,' + photo.media;
         image.alt = 'Фотография';
         card.appendChild(image);
+        image.addEventListener('click', function (event){
+            window.location.href = `${photo.id}/`
+        })
 
         const cardBody = createElement('div', ['card-body']);
         card.appendChild(cardBody);
@@ -455,8 +453,9 @@ function generatePage(photos) {
         commentsButton.textContent = 'Показать комментарии: ' +'('+ photo.comment_count + ')';
         //commentsButton.addEventListener('click', () => showComments(photo.id));
         commentsButton.addEventListener('click', function (){
+            console.log('меня нажали')
             $.ajax({
-                url: 'profile/user/data/get/',
+                url:  '/profile/user/data/get/',
                 dataType: 'json',
                 method: 'GET',
                 success: function (response){
@@ -475,6 +474,8 @@ function generatePage(photos) {
         image.addEventListener('mouseenter', () => {
             description.style.display = 'block';
         });
+
+
 
         image.addEventListener('mouseleave', () => {
             description.style.display = 'none';
