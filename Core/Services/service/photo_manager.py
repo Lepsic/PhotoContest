@@ -46,27 +46,37 @@ class PhotoManager:
             logger.error("Не корректное значение filter_value из filter_content_profile.js")
             logger.info(type_filter)
         if type_filter == "None":
-            return self.__create_response_dictionary(photos=photos, resize_action_type='profile_view')
+            return self._create_response_dictionary(photos=photos, resize_action_type='profile_view')
         else:
             if type_filter == 0:
                 photos = PhotoContent.objects.filter(Q(state=PhotoStateEnum.WAIT_APPROVED) |
                                                      Q(state=PhotoStateEnum.ON_EDIT), user_id=self.user)
-                return self.__create_response_dictionary(photos, resize_action_type='profile_view')
+                return self._create_response_dictionary(photos, resize_action_type='profile_view')
             if type_filter == 1:
                 photos = PhotoContent.objects.filter(state=PhotoStateEnum.APPROVED, user_id=self.user)
-                return self.__create_response_dictionary(photos, resize_action_type='profile_view')
+                return self._create_response_dictionary(photos, resize_action_type='profile_view')
             if type_filter == -1:
-                photos = PhotoContent.objects.filter(state=PhotoStateEnum.REJECTED, user_id=self.user)
-                return self.__create_response_dictionary(photos, resize_action_type='profile_view')
+                photos = PhotoContent.objects.filter(state=PhotoStateEnum.ON_DELETE, user_id=self.user)
+                return self._create_response_dictionary(photos, resize_action_type='profile_view')
             photos = PhotoContent.objects.filter(state=type_filter, user_id=self.user)
-            return self.__create_response_dictionary(photos, resize_action_type='profile_view')
+            return self._create_response_dictionary(photos, resize_action_type='profile_view')
+
+    def generate_photo_dictionary_on_publication_stack(self):
+        """Генерация словаря фото"""
+        photos = PhotoContent.objects.filter(state=PhotoStateEnum.WAIT_APPROVED)
+        response = self._create_response_dictionary(photos, 'profile_view')
+        return response
+    def generate_photo_dictionary_on_rejected_stack(self):
+        photos = PhotoContent.objects.filter(state=PhotoStateEnum.REJECTED)
+        response = self._create_response_dictionary(photos, 'profile_view')
+        return response
 
     def generate_photo_dictionary_on_main_page(self, photos=None):
         """Генерация словаря по фильтру для главной страницы"""
         if photos is None:
             sort_type = self.request.POST.get('sort_type')
             photos = self.__sort_photo_main_pages(sort_type)
-        response = self.__create_response_dictionary(photos=photos, resize_action_type='main_pages_view')
+        response = self._create_response_dictionary(photos=photos, resize_action_type='main_pages_view')
         if self.request.user.is_authenticated:
             for photo in response['data']:
                 if Likes.objects.filter(photo_id=photo['id'], user_id=self.request.user).exists():
@@ -92,7 +102,7 @@ class PhotoManager:
         img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
         return img_base64
 
-    def __create_response_dictionary(self, photos, resize_action_type):
+    def _create_response_dictionary(self, photos, resize_action_type):
         """Создает словарь response с фотками"""
         response = {'data': []}
         for photo in photos:
@@ -188,7 +198,7 @@ class ChangePhotoManager(PhotoManager):
                         change.id_update = photo_created
                         change.save()
                         self._all_delete_photo(legacy_update_photo)
-                photo_created.status = -100
+                photo_created.state = PhotoStateEnum.ON_EDIT
                 photo_created.save()
 
     def __create_dictionary_for_save_form(self, form):
@@ -196,3 +206,17 @@ class ChangePhotoManager(PhotoManager):
         user = self.user
         k_values = {'user_id': user, 'name': form.cleaned_data['name'], 'description': form.cleaned_data['description']}
         return k_values
+
+
+    def get_change_photo(self):
+        resize_type = 'profile_view'
+        update_photos = []
+        changes = PhotoChange.objects.all()
+        for change in changes:
+            update_photos.append(change.id_update)
+        response = self._create_response_dictionary(update_photos, resize_type)
+        for photo in response['data']:
+            photo_source = PhotoChange.objects.get(id_update=photo['id']).id_source
+            photo.update({'source_media': self._resize(photo_source, resize_type)})
+        return response
+
