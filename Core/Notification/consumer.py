@@ -17,6 +17,8 @@ class NotificationConsumer(AsyncWebsocketConsumer):
 
 
     async def send_notification_event(self, event):
+        print(self.scope['user'].id)
+        print(event['user_photo_id'])
         if event['user_photo_id'] == self.scope['user'].id:
             notification = event['notification']
             await self.send(text_data=json.dumps({

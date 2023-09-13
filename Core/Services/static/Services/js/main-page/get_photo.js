@@ -31,7 +31,6 @@ function get_photo_sorted(sort_data){
     headers: {'X-CSRFToken': csrftoken, 'X-SessionId': sessionid},
     success: function (response){
         generatePages(response.data)
-        console.log(response.data);
     }
 
 });
@@ -53,7 +52,6 @@ $('.btn-group-justified').on('change', '.btn-check', function (event) {
 
 searchButton.addEventListener('click',function (event) {
     event.preventDefault();
-    console.log(searchInput.value);
     $.ajax({
         url: '/content/photo/search/',
         dataType: 'json',
