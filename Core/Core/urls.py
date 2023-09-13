@@ -25,6 +25,7 @@ urlpatterns = [
     path('profile/', include('Services.urls.profile')),
     path('moderation/', include('Services.urls.moderation')),
     path('', include('Services.urls.mainpage')),
+    path('api/', include('api.urls'))
 
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
