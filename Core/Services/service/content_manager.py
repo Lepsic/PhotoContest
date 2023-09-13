@@ -11,7 +11,6 @@ class ContentManager:
     @staticmethod
     def get_count_comments_by_photo(photo_id):
         """Подсчет количества комменатриев по id фото"""
-        print(photo_id)
         return Comments.objects.filter(parent_id_image=photo_id).count()
 
     @staticmethod
@@ -26,12 +25,12 @@ class ContentManager:
         like = Likes.objects.filter(photo_id=photo, user_id=user)
         if like.exists():
             like.delete()
-            like_notification(user_id=user, like_id=photo.name, action="DeletedLike", work_username=user.username,
+            like_notification(user_id=photo.user_id, like_id=photo.name, action="DeletedLike", work_username=user.username,
                               like_count=str(ContentManager.get_count_likes_by_photo(photo_id)))
         else:
             like = Likes.objects.create(user_id=user, photo_id=photo)
             like.save()
-            like_notification(user_id=user, like_id=like.photo_id.name, action="CreatedLike",
+            like_notification(user_id=photo.user_id, like_id=like.photo_id.name, action="CreatedLike",
                               work_username=user.username,
                               like_count=str(ContentManager.get_count_likes_by_photo(photo_id)))
 
@@ -131,7 +130,7 @@ class ContentManager:
 
     @staticmethod
     def search_photo(word):
-        photos = PhotoContent.objects.filter(status=1)
+        photos = PhotoContent.objects.filter(state=1)
         search_occurrences = []
         for photo in photos:
             search_list = [photo.user_id.username, photo.description, photo.name]

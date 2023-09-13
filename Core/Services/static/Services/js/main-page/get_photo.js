@@ -53,7 +53,6 @@ $('.btn-group-justified').on('change', '.btn-check', function (event) {
 
 searchButton.addEventListener('click',function (event) {
     event.preventDefault();
-    console.log(searchInput.value);
     $.ajax({
         url: '/content/photo/search/',
         dataType: 'json',

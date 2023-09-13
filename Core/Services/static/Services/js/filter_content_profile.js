@@ -170,7 +170,7 @@ function Request(response, radioValue) {
     let row = $('<tr>');
     row.append($('<td class="text-center">').text(data[i].name));
     let imgCell = $('<td class="text-center">');
-    let img = $('<img src="" alt="Иди правь че сидишь?" class="text-center">');
+    let img = $('<img src="" alt="Photo" class="text-center">');
     img.attr('src', 'data:image/png;base64,' + data[i].media);
     imgCell.append(img);
     row.append(imgCell);
@@ -199,7 +199,6 @@ $(document).ready(function () {
 
     $('.btn-group-justified').on('change', '.btn-check', function (event) {
         let radioValue = $('input[name="vbtn-radio"]:checked').val();
-        console.log(radioValue);
     $.ajax({
         url: '/profile/filterUserPhoto/',
         data: {'filter_value': radioValue},
