@@ -121,7 +121,6 @@ class PhotoManager:
             img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
             return img_base64
 
-
     def _create_response_dictionary(self, photos, resize_action_type):
         """Создает словарь response с фотками"""
         response = {'data': []}
@@ -136,21 +135,32 @@ class PhotoManager:
         except TypeError:
             photo = photos
             response['data'].append(response['data'].append(
-                        {'name': photo.name, 'media': self._resize(photo=photo, resize_action_type=resize_action_type),
-                         'created_data': photo.create_data,
-                         'description': photo.description, 'id': photo.pk,
-                         'user': photo.user_id.id}))
+                {'name': photo.name, 'media': self._resize(photo=photo, resize_action_type=resize_action_type),
+                 'created_data': photo.create_data,
+                 'description': photo.description, 'id': photo.pk,
+                 'user': photo.user_id.id}))
         return response
 
     def delete_photo(self, body):
         """Фиктивное удаление(просто меняет статус)"""
         try:
             photo_id = body.get('id')
-            photo = PhotoContent.objects.get(user_id=self.user, pk=body.get('id'))
+            photo = PhotoContent.objects.get(user_id=self.user, pk=int(body.get('id')))
             photo.initial_delete()
             schedule_delete_photo.delay(photo_id)
+            return True
         except Exception as error:
             logger.error(error)
+            return False
+
+    def cancel_delete(self):
+        photo = PhotoContent.objects.get(id=int(self.request.POST.get('id')))
+        user = self.request.user
+        if user == photo.user_id:
+            photo.cancel_delete()
+            return 'Success'
+        else:
+            return 'Error'
 
     def _all_delete_photo(self, photo):
         """Полное удаление фото из бд и из файловой системы"""
@@ -179,7 +189,10 @@ class ChangePhotoManager(PhotoManager):
         self.photo = None
 
     def set_request(self, request):
+        """Используется в джанго формах"""
         self.request = request
+
+
 
     def set_id_change(self, id):
         self.id = id
@@ -194,8 +207,16 @@ class ChangePhotoManager(PhotoManager):
         form = change_form.ChangePhoto(initial=initial)
         return {'form': form, 'file': file}
 
+    def creation_response(self):
+        """Создание словаря исходной фотки по даннмы в бд """
+        photo = self.photo
+        response = {'name': photo.name, 'description': photo.description, 'media':
+            PhotoManager._resize(self, photo=photo, resize_action_type='profile_view')}
+        return response
+
+
     def change_form(self):
-        """Изменение фото"""
+        """Изменение фото в джанго формах"""
         form_update = change_form.ChangePhoto(self.request.POST, self.request.FILES)
 
         if form_update.is_valid():
@@ -235,6 +256,7 @@ class ChangePhotoManager(PhotoManager):
         return k_values
 
     def get_change_photo(self):
+        """Получение фоток очереди на изменения"""
         resize_type = 'profile_view'
         update_photos = []
         changes = PhotoChange.objects.all()
@@ -245,3 +267,28 @@ class ChangePhotoManager(PhotoManager):
             photo_source = PhotoChange.objects.get(id_update=photo['id']).id_source
             photo.update({'source_media': self._resize(photo_source, resize_type)})
         return response
+
+    def change_request(self):
+        """Запрс на изменение через рест"""
+        self.set_id_change(self.request.POST.get('id'))
+        upload_manager = UploadManager(request=self.request)
+        if self.request.FILES:
+            upload_manager.save_photo()
+            new_photo = upload_manager.save_content(returned=True)
+            new_photo.state = PhotoStateEnum.ON_EDIT
+            new_photo.save()
+            try:
+                change = PhotoChange.objects.create(id_source=self.photo, id_update=new_photo)
+                change.save()
+            except Exception:
+                if PhotoChange.objects.get(id_source=self.photo):
+                    change = PhotoChange.objects.get(id_source=self.photo)
+                    legacy_update_photo = change.id_update
+                    change.id_update = new_photo
+                    change.save()
+                    self._all_delete_photo(legacy_update_photo)
+        else:
+            if upload_manager.validate_name() is True:
+                self.photo.name = self.request.POST.get('name')
+                self.photo.description = self.request.POST.get('description')
+                self.photo.save()
