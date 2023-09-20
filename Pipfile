@@ -18,6 +18,7 @@ celery = "*"
 redis = "*"
 django-fsm = "*"
 ruff = "*"
+drf-yasg = "*"
 
 [dev-packages]
 
