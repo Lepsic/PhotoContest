@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from Services.service.upload_photo import UploadManager
 from Services.service.photo_manager import PhotoManager, ChangePhotoManager
-import json
+
 
 """
     Для всего требуется авторизация 
