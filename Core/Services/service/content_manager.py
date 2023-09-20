@@ -77,7 +77,7 @@ class ContentManager:
                                               parent_id_image_id=photo.id, entity_type=1,
                                               parent_id_comments_id=created_data['parent_id'],
                                               create_time=datetime.datetime.now())
-        else:
+        if created_data['parent_id_comment'] == 'false':
             photo = PhotoContent.objects.get(id=created_data['image_id'])
             comment = Comments.objects.create(user_id=created_data['user'], content=created_data['content'],
                                               parent_id_image_id=photo.id, entity_type=0,
@@ -96,19 +96,20 @@ class ContentManager:
     def delete_comment(comment_id, user):
         comment_id = int(comment_id)
         comment = Comments.objects.get(id=comment_id)
-        if Comments.objects.filter(id=comment_id).exists():
-            if Comments.objects.filter(entity_type=1, parent_id_comments_id=comment_id).exists():
-                return False
+        if user == comment.user_id:
+            if Comments.objects.filter(id=comment_id).exists():
+                if Comments.objects.filter(entity_type=1, parent_id_comments_id=comment_id).exists():
+                    return False
+                else:
+                    comment.delete()
+                    comment_notification(photo_id=comment.parent_id_image.name, user_id=comment.parent_id_image.user_id,
+                                         action="DeletedComment",
+                                         work_username=user.username,
+                                         comments_count=str(
+                                             ContentManager.get_count_comments_by_photo(comment.parent_id_image.id)))
+                    return True
             else:
-                comment.delete()
-                comment_notification(photo_id=comment.parent_id_image.name, user_id=comment.parent_id_image.user_id,
-                                     action="DeletedComment",
-                                     work_username=user.username,
-                                     comments_count=str(
-                                         ContentManager.get_count_comments_by_photo(comment.parent_id_image.id)))
-                return True
-        else:
-            logger.error('Комментария с таким id не существует')
+                logger.error('Комментария с таким id не существует')
 
     @staticmethod
     def get_content_comment(comment_id):
@@ -119,14 +120,14 @@ class ContentManager:
     @staticmethod
     def edit_comment_content(comment_id, edit_text, user):
         comment_id = int(comment_id)
-        print()
         comment = Comments.objects.get(id=comment_id)
-        if edit_text != '':
-            comment.content = edit_text
-            comment.save()
-            return True
-        else:
-            return ContentManager.delete_comment(comment_id, user)
+        if user == comment.user_id:
+            if edit_text != '':
+                comment.content = edit_text
+                comment.save()
+                return True
+            else:
+                return ContentManager.delete_comment(comment_id, user)
 
     @staticmethod
     def search_photo(word):
