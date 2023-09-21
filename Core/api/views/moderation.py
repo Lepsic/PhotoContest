@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from Services.service.moderation import Moderation
 from Services.service.photo_manager import ChangePhotoManager, PhotoManager
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 
 class PublishView(APIView, Moderation, PhotoManager):
@@ -14,6 +16,22 @@ class PublishView(APIView, Moderation, PhotoManager):
         super().__init__()
         PhotoManager.__init__(self)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Id фотографии'),
+                'action': openapi.Schema(type=openapi.TYPE_STRING,
+                                         description='Действие с фотографией (publish/reject)'),
+            },
+            required=['id', 'action'],
+        ),
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно'),
+            400: openapi.Response(description='Неверные параметры запроса'),
+            401: openapi.Response(description='Пользователь не авторизован'),
+        }
+    )
     def post(self, request):
         """Публикация фотографий"""
         pk = request.POST.get('id')
@@ -31,6 +49,21 @@ class PublishView(APIView, Moderation, PhotoManager):
         else:
             return Response(status.HTTP_401_UNAUTHORIZED)
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно', schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'name': openapi.Schema(type=openapi.TYPE_STRING, description='Нзавние фото'),
+                    'media': openapi.Schema(type=openapi.TYPE_STRING, description='фото в байтах'),
+                    'created_data': openapi.Schema(type=openapi.TYPE_STRING, description='Дата создания'),
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='id фото'),
+                    'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='id пользователя'),
+                }
+            )),
+            401: openapi.Response(description='Пользователь не авторизован'),
+        }
+    )
     def get(self, request):
         """
         Получает список фотографий в очереди на публикацию
@@ -47,6 +80,21 @@ class RejectView(APIView, Moderation, PhotoManager):
         super().__init__()
         PhotoManager.__init__(self)
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно', schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'name': openapi.Schema(type=openapi.TYPE_STRING, description='Нзавние фото'),
+                    'media': openapi.Schema(type=openapi.TYPE_STRING, description='фото в байтах'),
+                    'created_data': openapi.Schema(type=openapi.TYPE_STRING, description='Дата создания'),
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='id фото'),
+                    'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='id пользователя'),
+                }
+            )),
+            401: openapi.Response(description='Пользователь не авторизован'),
+        }
+    )
     def get(self, request):
         """
         Возвращает список фотографий в очереди на отклонение
@@ -58,6 +106,19 @@ class RejectView(APIView, Moderation, PhotoManager):
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Id фотографии'),
+            },
+            required=['id'],
+        ),
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно'),
+            401: openapi.Response(description='Пользователь не авторизован'),
+        }
+    )
     def post(self, request):
         user = request.user
         if user.is_superuser:
@@ -72,6 +133,23 @@ class ChangeView(APIView, ChangePhotoManager, Moderation):
         super().__init__()
         ChangePhotoManager.__init__(self)
 
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно', schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'name': openapi.Schema(type=openapi.TYPE_STRING, description='Нзавние фото'),
+                    'media': openapi.Schema(type=openapi.TYPE_STRING, description='Обновленное фото в байтах'),
+                    'created_data': openapi.Schema(type=openapi.TYPE_STRING, description='Дата создания'),
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description=
+                            'id фото(на которое заменяется опубликованное)'),
+                    'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='id пользователя'),
+                    'source_media': openapi.Schema(type=openapi.TYPE_STRING, description='исходное фото в байтах')
+                }
+            )),
+            401: openapi.Response(description='Пользователь не авторизован'),
+        }
+    )
     def get(self, request):
         """Получет фотки в очереди на изменение"""
         if request.user.is_superuser:
@@ -80,6 +158,22 @@ class ChangeView(APIView, ChangePhotoManager, Moderation):
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Id фотографии'),
+                'action': openapi.Schema(type=openapi.TYPE_STRING,
+                                         description='Действие с фотографией (publish/reject)'),
+            },
+            required=['id', 'action'],
+        ),
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно'),
+            400: openapi.Response(description='Неверные параметры запроса'),
+            401: openapi.Response(description='Пользователь не авторизован'),
+        }
+    )
     def post(self, request):
         """
         Постятся или отклоняются изменения

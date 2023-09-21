@@ -33,6 +33,7 @@ ALLOWED_HOSTS = [config('HOST')]
 INSTALLED_APPS = [
     'daphne',
     'channels',
+    'drf_yasg',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

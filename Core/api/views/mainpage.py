@@ -3,21 +3,57 @@ from rest_framework.response import Response
 from rest_framework import status
 from Services.service.photo_manager import PhotoManager
 from Services.service.content_manager import ContentManager
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import schema
+from drf_yasg import openapi
+
 
 
 class GetPhoto(APIView, PhotoManager, ContentManager):
     """Получение и поиск опубликованных фотографий"""
+
     def __init__(self):
         super().__init__()
         PhotoManager.__init__(self)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'action': openapi.Schema(type=openapi.TYPE_STRING, description='Возможные значения: "search", "get"'),
+                'searchWord': openapi.Schema(type=openapi.TYPE_STRING,
+                                             description='Слово по которому будет проводиться поиск'),
+                'sort_type': openapi.Schema(type=openapi.TYPE_STRING,
+                                            description='Возможные значения: "count_likes", "count_comments", '
+                                                        '"create_data"'),
+            },
+            required=['action'],
+        ),
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно', schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'name': openapi.Schema(type=openapi.TYPE_STRING, description='Нзавние фото'),
+                    'media': openapi.Schema(type=openapi.TYPE_STRING, description='фото в байтах'),
+                    'created_data': openapi.Schema(type=openapi.TYPE_STRING, description='Дата создания'),
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='id фото'),
+                    'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='id пользователя'),
+                    'like_exist': openapi.Schema(type=openapi.TYPE_STRING, description='Существует лайк или нет. '
+                                                                                       'Принимает значение true/false'),
+                    'like_count': openapi.Schema(type=openapi.TYPE_STRING, description='Количество лайков'),
+                    'comment_count': openapi.Schema(type=openapi.TYPE_STRING, description='Количество комментариев')
+                }
+            )),
+            400: openapi.Response(description='Неверные параметры запроса'),
+        }
+    )
     def post(self, request):
         """
         Передается action
         если action = search:
 
-        в request нужно передать searchWord и слово по которому будет
-        проводиться поиск
+        в request нужно передать searchWord  (слово по которому будет
+        проводиться поиск)
 
         если action = get:
 
@@ -38,16 +74,49 @@ class GetPhoto(APIView, PhotoManager, ContentManager):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('value_id', openapi.IN_PATH, description='Id фотографии', type=openapi.TYPE_INTEGER),
+        ],
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно', schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'name': openapi.Schema(type=openapi.TYPE_STRING, description='Нзавние фото'),
+                    'media': openapi.Schema(type=openapi.TYPE_STRING, description='фото в байтах'),
+                    'created_data': openapi.Schema(type=openapi.TYPE_STRING, description='Дата создания'),
+                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='id фото'),
+                    'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='id пользователя'),
+                    'like_exist': openapi.Schema(type=openapi.TYPE_STRING, description='Существует лайк или нет. '
+                                                                                       'Принимает значение true/false'),
+                    'like_count': openapi.Schema(type=openapi.TYPE_STRING, description='Количество лайков'),
+                    'comment_count': openapi.Schema(type=openapi.TYPE_STRING, description='Количество комментариев')
+                }
+            )),
+            }
+    )
     def get(self, request, value_id):
         self.update_data(request)
         response = self.generate_photo_dictionary_on_photocard(value_id)
         return Response(response, status=status.HTTP_200_OK)
 
 
-
 class LikeAction(APIView):
     """Функционал лайков"""
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'photo_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Id фотографии'),
+            },
+            required=['photo_id'],
+        ),
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно'),
+            400: openapi.Response(description='Неверные параметры запроса'),
+        }
+    )
     def post(self, request):
         """
         Метод для создание/удаление(Если лайка нет, то создастся, если есть,
@@ -63,10 +132,27 @@ class LikeAction(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class CommentAction(APIView):
     """Функционал комментариев"""
+
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'image_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Id фотографии'),
+                'content': openapi.Schema(type=openapi.TYPE_STRING, description='Текст комментария'),
+                'parent_id_comment': openapi.Schema(type=openapi.TYPE_BOOLEAN,
+                                                    description='Флаг ответа на комментарий'),
+                'parent_id': openapi.Schema(type=openapi.TYPE_INTEGER,
+                                            description='Id комментария на который отвечает данный комментарий (только в случае если комментарий является ответом)'),
+            },
+            required=['image_id', 'content', 'parent_id_comment'],
+        ),
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно'),
+            400: openapi.Response(description='Неверные параметры запроса'),
+        }
+    )
     def post(self, request):
         """
         Пост коммента или ответ на него
@@ -90,6 +176,19 @@ class CommentAction(APIView):
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'comment_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Id комментария'),
+            },
+            required=['comment_id'],
+        ),
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно'),
+            409: openapi.Response(description='Конфликт при удалении комментария'),
+        }
+    )
     def delete(self, request):
         """
         Удаление комментариев
@@ -102,6 +201,20 @@ class CommentAction(APIView):
         else:
             return Response(status=status.HTTP_409_CONFLICT)
 
+    @swagger_auto_schema(
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'comment_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Id комментария'),
+                'editText': openapi.Schema(type=openapi.TYPE_STRING,
+                                           description='Текст, на который нужно заменить комментарий'),
+            },
+            required=['comment_id', 'editText'],
+        ),
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно'),
+            409: openapi.Response(description='Конфликт при изменении комментария')
+        })
     def patch(self, request):
         """
         Изменение комментариев
@@ -117,7 +230,26 @@ class CommentAction(APIView):
         else:
             return Response(status.HTTP_409_CONFLICT)
 
-
+    @swagger_auto_schema(
+        manual_parameters=[
+            openapi.Parameter('value_id', openapi.IN_PATH, type=openapi.TYPE_INTEGER, description='Id фотографии'),
+        ],
+        responses={
+            200: openapi.Response(description='Запрос выполнен успешно',schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'id': openapi.Schema(type=openapi.TYPE_STRING, description='id комментария'),
+                    'username': openapi.Schema(type=openapi.TYPE_STRING, description='Имя пользака'),
+                    'content': openapi.Schema(type=openapi.TYPE_STRING, description='Текст комментария'),
+                    'count_child_comments': openapi.Schema(type=openapi.TYPE_INTEGER, description='Количество ответов '
+                                                                                                  'на комментарий'),
+                    'child_comment': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Является дочерним '
+                                                                                           'комментом или нет'),
+                    'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='id опубликовавшего пользователя')
+                }
+            )),
+        }
+    )
     def get(self, request, value_id):
         """
         Передается id фото(value_id)
