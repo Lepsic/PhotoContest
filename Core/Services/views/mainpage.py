@@ -9,7 +9,10 @@ login_url = '/authentication/login/'
 
 
 def main_page(request):
-    return render(request, 'mainpage/index.html')
+    context = {}
+    if request.user.is_authenticated:
+        context.update({'user': request.user})
+    return render(request, 'mainpage/index.html', context=context)
 
 
 def get_photo_content(request):
