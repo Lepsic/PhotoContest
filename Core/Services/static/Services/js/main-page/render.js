@@ -323,7 +323,7 @@ function showComments(photoId, userId) {
                     showMoreButton.textContent = 'Показать еще ' +
                         (childCommentsForParent.length-2) + ' комментариев';
                     showMoreButton.addEventListener('click', () => showAllChildComments(childComments,
-                        childCommentsBlock, userId, photoId));
+                        childCommentsBlock, userId, photoId, comment.id));
                     childCommentsBlock.appendChild(showMoreButton);
                 }
                 let buttonWrapper = addButtonWrapper(commentElement, userId, photoId);
@@ -384,12 +384,13 @@ function showComments(photoId, userId) {
 
 
 
-function showAllChildComments(childComments, childCommentsBlock, userId, photoId) {
+function showAllChildComments(childComments, childCommentsBlock, userId, photoId, parentCommentId) {
     childCommentsBlock.innerHTML = '';
     childComments.forEach(comment =>{
         let childCommentElement = createElement('div', ['child-comment'])
         childCommentElement.setAttribute('userId', comment.user_id);
         childCommentElement.setAttribute('id', comment.id);
+        childCommentElement.setAttribute('parent_comment_id', parentCommentId);
         childCommentElement.innerHTML = '<span class="username">' + comment.username + '</span>: ' + comment.content;
         childCommentsBlock.appendChild(childCommentElement);
         let buttonWrapper = addButtonWrapper(childCommentElement, userId);
