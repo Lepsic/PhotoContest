@@ -7,10 +7,11 @@ from loguru import logger
 from PIL import Image
 
 from ..forms import change_form
-from ..models import Likes, PhotoChange, PhotoContent, PhotoStateEnum
+from ..models import Likes, PhotoChange, PhotoContent, PhotoStateEnum, Comments
 from ..tasks import schedule_delete_photo
 from .content_manager import ContentManager
 from .upload_photo import UploadManager
+from .notification import delete_photo_notification
 
 
 class PhotoManager:
@@ -147,6 +148,11 @@ class PhotoManager:
             photo_id = body.get('id')
             photo = PhotoContent.objects.get(user_id=self.user, pk=int(body.get('id')))
             photo.initial_delete()
+            comments = Comments.objects.filter(parent_id_image=photo)  # Все комментарии к фото
+            user_comments = set()  # пользаки, которые оставили комментарии
+            for comment in comments:
+                user_comments.add(comment.user_id)
+            delete_photo_notification(photo, user_comments)
             schedule_delete_photo.delay(photo_id)
             return True
         except Exception as error:
@@ -192,8 +198,6 @@ class ChangePhotoManager(PhotoManager):
         """Используется в джанго формах"""
         self.request = request
 
-
-
     def set_id_change(self, id):
         self.id = id
         self.photo = PhotoContent.objects.get(pk=id)
@@ -213,7 +217,6 @@ class ChangePhotoManager(PhotoManager):
         response = {'name': photo.name, 'description': photo.description, 'media':
             PhotoManager._resize(self, photo=photo, resize_action_type='profile_view')}
         return response
-
 
     def change_form(self):
         """Изменение фото в джанго формах"""

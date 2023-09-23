@@ -70,6 +70,10 @@ class ContentManager:
         return response
 
     @staticmethod
+    def get_user_dictionary():
+        pass
+
+    @staticmethod
     def post_comment(created_data):
         if created_data['parent_id_comment'] == 'true':
             photo = Comments.objects.get(id=created_data['parent_id']).parent_id_image
