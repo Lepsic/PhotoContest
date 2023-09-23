@@ -14,6 +14,13 @@
 
 <body>
     <div class="header">
+    {% if user %}
+        <div class="button-wrapper">
+            <a href={% url 'profile' %}>
+                <button class="btn btn-primary">Профиль</button>
+            </a>
+        </div>
+    {% endif %}
     <h5>Сортировка по:</h5>
         <div class="btn-group btn-group-justified" role="group" aria-label="Basic radio toggle button group">
             <input type="radio" class="btn-check" name="radioBtn" id="radio1" autocomplete="off" value="create_data" checked>

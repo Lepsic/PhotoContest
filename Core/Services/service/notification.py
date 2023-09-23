@@ -43,3 +43,15 @@ def global_notification(text):
         'notification': text
     }
     async_to_sync(channel_layers.group_send)('notification', event)
+
+
+def delete_photo_notification(photo_id, user_set_id):
+    channels_layers = get_channel_layer()
+    notification = 'Ваш комментарий(комментарии) к фото ' + photo_id.name + ' Будут удалены в связи с удалением фото'
+    event = {
+        'type': 'send_photo_deletion',
+        'user_set_id': user_set_id,
+        'notification': notification
+    }
+    async_to_sync(channels_layers.group_send)('notification', event)
+

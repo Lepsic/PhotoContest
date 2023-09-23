@@ -33,6 +33,7 @@ ALLOWED_HOSTS = [config('HOST')]
 INSTALLED_APPS = [
     'daphne',
     'channels',
+    'drf_yasg',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,6 +46,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap4',
     'django_fsm',
+    'api',
+    'rest_framework',
 
 
 ]
@@ -80,6 +83,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Core.wsgi.application'
 ASGI_APPLICATION = 'Core.asgi.application'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': ['api.utils.authenticate.AuthenticationClass',
+                                       ],
+
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
