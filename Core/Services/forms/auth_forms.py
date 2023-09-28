@@ -10,8 +10,8 @@ class UserCreationsForm(forms.Form):
 
     username = forms.CharField(max_length=40, label='Имя пользователя')
     name = forms.CharField(max_length=100, label='Имя')
-    pas1 = forms.CharField(max_length=40)
-    pas2 = forms.CharField(max_length=40)
+    pas1 = forms.CharField(max_length=40, widget=forms.PasswordInput)
+    pas2 = forms.CharField(max_length=40, widget=forms.PasswordInput)
 
 
     def clean(self):

@@ -1,18 +1,19 @@
 {% load crispy_forms_filters %}
 {% load crispy_forms_tags %}
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
-      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
-<style>
-	body {
-   	   background: #382f2f;
-	   color: #fff;
-   }
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <style>
+        body {
+           background: #382f2f;
+           color: #fff;
+       }
    </style>
-
+</head>
 
 <body>
 <div class="content-section">
+        {% load socialaccount %}
         <form method="POST">
             {% csrf_token %}
             <fieldset class="form-group">
@@ -26,6 +27,7 @@
         <div class="border-top pt-3">
             <small class="text-muted">
                 Нужен аккаунт? <a class="ml-2" href="{% url 'register' %}">Регистрация</a>
+                Войти через социальную сеть <a class = 'ml-2' href="{%  provider_login_url 'vk' %}">Вконтакте</a>
             </small>
         </div>
     </div>

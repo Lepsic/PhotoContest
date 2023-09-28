@@ -3,6 +3,7 @@ from django.contrib.auth.views import LogoutView as Logout
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 
+
 from ..forms import auth_forms
 
 
@@ -21,3 +22,6 @@ def create_user(request):
 
 class LogoutView(Logout):
     next_page = reverse_lazy('login')
+
+def callback(request):
+    pass

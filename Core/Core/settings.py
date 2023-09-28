@@ -14,6 +14,7 @@ from pathlib import Path
 
 from decouple import config
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -30,10 +31,16 @@ ALLOWED_HOSTS = [config('HOST')]
 
 # Application definition
 
+
 INSTALLED_APPS = [
     'daphne',
     'channels',
     'drf_yasg',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.vk',
+    'social_django',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,8 +56,12 @@ INSTALLED_APPS = [
     'api',
     'rest_framework',
 
-
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -60,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
 ]
 
 ROOT_URLCONF = 'Core.urls'
@@ -88,6 +100,21 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ['api.utils.authenticate.AuthenticationClass',
                                        ],
 
+}
+
+SOCIALACCOUNT_PROVIDERS = {
+    'vk': {
+        'APP': {
+            'client_id': '51758395',
+            'secret': 'zxE3pnLALsz137t3CPJA',
+            'key': '',
+        }
+    }
+}
+
+SOCIAL_FORMS = {'signup': 'Services.forms.Form.SocialSignupForm'}
+FORMS = {
+    'signup': 'Core.Services.forms.Form.SocialSignupForm',
 }
 
 # Database
@@ -160,3 +187,5 @@ LOGIN_REDIRECT_URL = "/profile/"
 
 CELERY_BROKER_URL = "redis://127.0.0.1:6379"
 CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379"
+
+SOCIALACCOUNT_ADAPTER = 'Services.forms.adapter.CustomSocialAccountAdapter'
