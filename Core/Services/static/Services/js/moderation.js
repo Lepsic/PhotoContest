@@ -23,7 +23,8 @@ function createElement(tag, classNames) {
 let csrftoken = getCookie('csrftoken');
 let sessionid = getCookie('sessionid');
 
-const baseURL = 'http://127.0.0.1:8000/'
+const baseURL = window.location.origin + '/';
+console.log(baseURL);
 const bodyContainer = document.getElementById('body')
 const searchButton = document.getElementById('searchButton');
 const searchInput = document.getElementById('searchInput');
