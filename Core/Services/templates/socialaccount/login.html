@@ -1,0 +1,20 @@
+{% load i18n %}
+
+
+<form method="post" id="myForm" style="display: none">
+  {% csrf_token %}
+  <button type="submit">{% trans "Continue" %}</button>
+</form>
+
+<h1 style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);">Ожидайте...</h1>
+
+
+<script>
+  // Находим форму по ее id
+  var form = document.getElementById('myForm');
+
+  // Выполняем действие формы при загрузке страницы
+  window.addEventListener('load', function() {
+    form.submit();
+  });
+</script>

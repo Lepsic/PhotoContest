@@ -27,8 +27,9 @@
         <div class="border-top pt-3">
             <small class="text-muted">
                 Нужен аккаунт? <a class="ml-2" href="{% url 'register' %}">Регистрация</a>
-                Войти через социальную сеть <a class = 'ml-2' href="{%  provider_login_url 'vk' %}">Вконтакте</a>
+                Войти через социальную сеть <a class = 'ml-2' href="{% provider_login_url 'vk'  %}">Вконтакте</a>
             </small>
+
         </div>
     </div>
 </body>
