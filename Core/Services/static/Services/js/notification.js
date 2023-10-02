@@ -6,6 +6,7 @@ function addNotification(message) {
     let notification = document.createElement('div');
     notification.classList.add('notification');
     notification.textContent = message;
+    console.log(message);
     notificationContent.appendChild(notification);
     return notification
 }
