@@ -160,3 +160,6 @@ cython_debug/
 #.idea/
 /Core/media/
 /Core/Services/static/
+/Core/Services/media /
+/Core/Core/media /
+/Core/media /
