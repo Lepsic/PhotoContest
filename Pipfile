@@ -19,6 +19,8 @@ redis = "*"
 django-fsm = "*"
 ruff = "*"
 drf-yasg = "*"
+django-allauth = "*"
+social-auth-app-django = "*"
 
 [dev-packages]
 
