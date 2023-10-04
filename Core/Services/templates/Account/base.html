@@ -21,7 +21,10 @@
         <div class="d-flex justify-content-end align-items-start">
             <ul>
                 <li><h3 class="list-group-item-text">Hello {{ username }}</h3></li>
-                <li><a class="list-group-item-success" href={% url 'logout' %} >Выход</a> </li>
+                <li><a class="list-group-item-success" href={% url 'mainpage' %}><button class="btn btn-primary">
+                    На главную</button></a> </li>
+                <li><a class="list-group-item-success" href={% url 'logout' %} ><button class="btn btn-primary">
+                    Выход</button></a> </li>
             </ul>
         </div>
 
@@ -39,7 +42,7 @@
                <tbody></tbody>
             </table>
 
-            <li class="list-group-item"><a href='upload'>Загрузка фото</a></li>
+            <li class="list-group-item"><a href='upload'><button class="btn btn-primary">Загрузка</button></a></li>
         </div>
 
         <div class="btn-group-justified" role="group" aria-label="Justified radio toggle button group">

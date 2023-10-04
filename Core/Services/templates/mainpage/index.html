@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конкурс фотографий</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'Services/Css/main-page_min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'Services/Css/notification.css' %}">
+</head>
+
+<body>
+    <div class="header">
+    {% if user %}
+        <div class="button-wrapper">
+            <a href={% url 'profile' %}>
+                <button class="btn btn-primary">Профиль</button>
+            </a>
+        </div>
+    {% endif %}
+    <h5>Сортировка по:</h5>
+        <div class="btn-group btn-group-justified" role="group" aria-label="Basic radio toggle button group">
+            <input type="radio" class="btn-check" name="radioBtn" id="radio1" autocomplete="off" value="create_data" checked>
+            <label class="btn btn-outline-primary" for="radio1">Дата добавления</label>
+
+            <input type="radio" class="btn-check" name="radioBtn" id="radio2" value="count_likes" autocomplete="off">
+            <label class="btn btn-outline-primary" for="radio2">Лайки</label>
+
+            <input type="radio" class="btn-check" name="radioBtn" id="radio3" value="count_comments" autocomplete="off">
+            <label class="btn btn-outline-primary" for="radio3">Комменатрии</label>
+            <div class="input-group search-container">
+                <span class="input-group-text">Поиск</span>
+                <input type="text" id="searchInput" class="form-control search-control" placeholder="Введите поисковый запрос">
+                <button type="submit" id = "searchButton" class="btn btn-primary">Найти</button>
+            </div>
+            </div>
+
+
+    </div>
+    <div class="container"></div>
+    <!--<link rel="stylesheet" href="styles.css"> -->
+    <script type="module" src={% static "Services/js/main-page/get_photo.js" %}></script>
+    <div id="notificationContainer">
+        <div id="notificationContent"></div>
+    </div>
+    <script src={% static "Services/js/notification.js" %}></script>
+</body>
+</html>

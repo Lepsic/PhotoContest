@@ -1,14 +1,15 @@
 import json
-from django.utils.decorators import method_decorator
-from django.shortcuts import render, redirect
+
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django.utils.decorators import method_decorator
+from django.views import View
+
+from ..forms.change_form import ChangePhoto
 from ..forms.upload_photo_form import UploadPhoto
 from ..models import PhotoContent
-from django.conf import settings
-from django.views import View
-from ..service.photo_manager import PhotoManager, ChangePhotoManager
-from ..forms.change_form import ChangePhoto
+from ..service.photo_manager import ChangePhotoManager, PhotoManager
 
 login_url = '/authentication/login/'
 
@@ -16,7 +17,6 @@ login_url = '/authentication/login/'
 @login_required(login_url=login_url)
 def base_account(request):
     """Базовая страница профиля"""
-    print(request.user.is_authenticated)
     if not request.user.is_authenticated:
         return redirect('/authentication/login/?next=/profile/')
     context = {'username': request.user.username}
@@ -27,7 +27,7 @@ def base_account(request):
 @login_required(login_url=login_url)
 def a_filter_content(request):
     manager = PhotoManager(request=request)
-    response = manager.filter_on_profile()
+    response = manager.generate_photo_dictionary_on_profile()
     return JsonResponse(response)
 
 
@@ -87,10 +87,24 @@ def cancel_delete(request):
     user = request.user
     photo = PhotoContent.objects.get(pk=photo_id)
     if photo.user_id == user:
-        photo.status = 1
-        photo.save()
+        photo.cancel_delete()
         return HttpResponse(request, status=200)
     else:
         from loguru import logger
         logger.error("Редактируемое фото не является фото, опубликовнное пользоваетлем,, отправившим запрос")
         return HttpResponse(request, status=404)
+
+
+def get_user_data(request):
+    user = request.user
+    if user.is_authenticated:
+        response = {"id": user.pk, 'username': user.username}
+    else:
+        response = {'NotAuthenticated'}
+    return JsonResponse(response)
+
+
+
+
+
+

@@ -1,10 +1,12 @@
 import os
-from loguru import logger
-from ..models import PhotoContent
-from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
-from django.conf import settings
 from datetime import datetime
+
 from decouple import config
+from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
+from loguru import logger
+
+from ..models import PhotoContent
 
 
 class UploadManager:
@@ -31,17 +33,22 @@ class UploadManager:
         """Если вдруг напрямую понадобится передать request"""
         self.request = request
 
-    def __validate_name(self):
+    def validate_name(self):
         """Валидация названия"""
         name = self.request.POST['name']
         if PhotoContent.objects.filter(name=name).exists():
-            self.form.add_error('name', 'Данное имя пользователя уже занято')
+            try:
+                self.form.add_error('name', 'Данное имя пользователя уже занято')
+                return False
+            except Exception:
+                return False
+        else:
+            return True
 
     def __validate_type_photo(self):
         """Валидация типа данных"""
-        photo_type = self.request.FILES['media'].content_type
-        print(type(self.request.FILES['media']))
-        if isinstance(self.request.FILES['media'], InMemoryUploadedFile) or isinstance(self.request.FILES['media'],
+        photo_type = self.request.FILES[self.media_field].content_type
+        if isinstance(self.request.FILES[self.media_field], InMemoryUploadedFile) or isinstance(self.request.FILES['media'],
                                                                                        TemporaryUploadedFile):
             if photo_type not in self.content_type:
                 self.form.add_error('media', 'Недопустимый тип файла. Файл должен быть форматом jpg или png')
@@ -51,7 +58,23 @@ class UploadManager:
     def validate_all(self):
         """Валидация данных"""
         self.__validate_type_photo()
-        self.__validate_name()
+        self.validate_name()
+
+    def validate_api(self):
+        photo_type = self.request.FILES[self.media_field].content_type
+        if isinstance(self.request.FILES[self.media_field], InMemoryUploadedFile) or isinstance(
+                self.request.FILES[self.media_field],
+                TemporaryUploadedFile):
+            if photo_type not in self.content_type:
+                return 'TypeError'
+        else:
+            return 'TypeError'
+        name = self.request.POST['name']
+        if PhotoContent.objects.filter(name=name).exists():
+            return 'NameError'
+
+        return True
+
 
     def save_photo(self, photo_form=None):
         """Сохранение фото в файловую систему"""
@@ -61,14 +84,15 @@ class UploadManager:
             photo = photo_form
 
         name = ''.join([datetime.now().strftime('%Y-%m-%d%H:%M:%S.%f'), photo.name.replace(' ', '')])
-        self.absolute_path_photo = '{}/{}/{}'.format(self.path_to_static, self.PhotoDirectory,
-                                                     name)
+        self.absolute_path_photo = f'{self.path_to_static}/{self.PhotoDirectory}/{name}'
 
-        self.path_photo = "{}/{}".format(self.PhotoDirectory, name)
+        self.path_photo = f"{self.PhotoDirectory}/{name}"
         with open(self.absolute_path_photo, 'wb+') as destination:
             for chunk in photo.chunks():
                 destination.write(chunk)
-        self.path_photo = "{}{}/{}".format(settings.STATIC_URL, self.PhotoDirectory, name)
+        self.path_photo = f"{settings.STATIC_URL}{self.PhotoDirectory}/{name}"
+
+
 
     def save_content(self, photo_value=None, returned=False):
         """Создание модели и сохранение ее в бд returned - Нужно ли возвращать получившуюся в бд запись"""

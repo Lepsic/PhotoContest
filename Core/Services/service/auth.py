@@ -1,5 +1,6 @@
-from ..models.custom_user import CustomUser
 import re
+
+from ..models.custom_user import CustomUser
 
 
 class ServiceCreationUser:
@@ -12,16 +13,19 @@ class ServiceCreationUser:
         self.validate_data = data
 
     def __validate_username(self):
-        username_field = 'username'
-        username = self.validate_data.get('username')
-        if re.match("^[a-zA-Z0-9_]*$", username):
-            if CustomUser.objects.filter(username=username).exists():
-                self.form.add_error(username_field, 'Это имя пользователя уже занято, введите другое')
-            if len(username) < 3:
-                self.form.add_error(username_field, 'Имя пользователя должно состоять из более чем 3 символов')
+        try:
+            username_field = 'username'
+            username = self.validate_data.get('username')
+            if re.match("^[a-zA-Z0-9_]*$", username):
+                if CustomUser.objects.filter(username=username).exists():
+                    self.form.add_error(username_field, 'Это имя пользователя уже занято, введите другое')
+                if len(username) < 3:
+                    self.form.add_error(username_field, 'Имя пользователя должно состоять из более чем 3 символов')
 
-        else:
-            self.form.add_error(username_field, "Используйте только допустимые символы")
+            else:
+                self.form.add_error(username_field, "Используйте только допустимые символы")
+        except Exception:
+            self.form.add_error(username_field, 'Это имя пользователя уже занято, введите другое')
 
     def __validate_password(self):
         password_field1 = 'pas1'

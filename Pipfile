@@ -14,6 +14,13 @@ django-crispy-forms = "*"
 crispy-bootstrap4 = "*"
 loguru = "*"
 python-decouple = "*"
+celery = "*"
+redis = "*"
+django-fsm = "*"
+ruff = "*"
+drf-yasg = "*"
+django-allauth = "*"
+social-auth-app-django = "*"
 
 [dev-packages]
 
