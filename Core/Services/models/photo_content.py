@@ -2,6 +2,7 @@ from django.db import models
 from django_fsm import FSMIntegerField, transition
 
 
+
 class PhotoStateEnum:
     WAIT_APPROVED = 0  # В ожидании публикации
     APPROVED = 1  # Опубликовано
@@ -14,8 +15,10 @@ class PhotoStateEnum:
 class PhotoContent(models.Model):
     id = models.BigAutoField(primary_key=True)
     user_id = models.ForeignKey('CustomUser', on_delete=models.CASCADE)
-    content = models.CharField(max_length=300)
-    content_path = models.CharField(max_length=300)
+    """Версионность"""
+    image = models.ImageField(upload_to='images/original')
+    image_profile = models.ImageField(upload_to='images/profile')
+    image_main = models.ImageField(upload_to='images/main')
     create_data = models.DateField(blank=True)  # Дата фактического создания
     name = models.CharField(max_length=250, blank=True)
     description = models.TextField(max_length=250, blank=False)
