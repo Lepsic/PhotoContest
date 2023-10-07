@@ -57,7 +57,7 @@ function getStackRejected(){
                  descriptionPhoto.textContent = data[i].description;
                  let photoImgCell = document.createElement('td');
                  let img = $('<img src="" alt="Photo" class="text-center" >');
-                 img.attr('src', 'data:image/png;base64,' + data[i].media);
+                 img.attr('src', data[i].media);
                  photoImgCell.append(img[0]);
                  let cancelRejectButton = $('<button class="btn btn-danger">').text('Отправить на модерацию');
                  cancelRejectButton.click(function (){
@@ -110,7 +110,7 @@ function getStackPublication(){
                 descriptionPhoto.textContent = data[i].description;
                 let photoImgCell = document.createElement('td');
                 let img = $('<img src="" alt="Photo" class="text-center" >');
-                img.attr('src', 'data:image/png;base64,' + data[i].media);
+                img.attr('src',  data[i].media);
                 photoImgCell.append(img[0]);
                 let approvedButton = $('<button class="btn btn-danger">').text('Опубликовать фото');
                 let rejectedButton = $('<button class="btn btn-danger">').text('Отклонить фото');
@@ -178,11 +178,11 @@ function getStackChange(){
                 descriptionPhoto.textContent = data[i].description;
                 let photoImgSourceCell = document.createElement('td');
                 let imgSource = $('<img src="" alt="Photo" class="text-center" >');
-                imgSource.attr('src', 'data:image/png;base64,' + data[i].media);
+                imgSource.attr('src',  data[i].media);
                 photoImgSourceCell.append(imgSource[0]);
                 let photoImgUpdateCell = document.createElement('td');
                 let imgUpdate = $('<img src="" alt="Photo" class="text-center" >');
-                imgUpdate.attr('src', 'data:image/png;base64,' + data[i].source_media);
+                imgUpdate.attr('src', data[i].source_media);
                 photoImgUpdateCell.append(imgUpdate[0]);
                 let approvedButton = $('<button class="btn btn-danger">').text('Опубликовать изменения');
                 let rejectedButton = $('<button class="btn btn-danger">').text('Отклонить изменения');

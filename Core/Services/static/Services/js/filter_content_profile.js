@@ -33,7 +33,7 @@ function ShowApproved(response){
                 row.append($('<td>').text(data[i].name));
                 let imgCell = $('<td>');
                 let img = $('<img src="" alt="Иди правь че сидишь?">');
-                img.attr('src', 'data:image/png;base64,' + data[i].media);
+                img.attr('src', data[i].media);
                 imgCell.append(img);
                 row.append(imgCell);
                 row.append($('<td>').text(data[i].description));
@@ -110,7 +110,7 @@ function Rejected(response){
     row.append($('<td class="text-center">').text(data[i].name));
     let imgCell = $('<td class="text-center">')
     let img = $('<img src="" alt="Иди правь че сидишь?" class="text-center">');
-    img.attr('src', 'data:image/png;base64,' + data[i].media);
+    img.attr('src', data[i].media);
     imgCell.append(img);
     row.append(imgCell);
     row.append($('<td>').text(data[i].description));
@@ -171,7 +171,8 @@ function Request(response, radioValue) {
     row.append($('<td class="text-center">').text(data[i].name));
     let imgCell = $('<td class="text-center">');
     let img = $('<img src="" alt="Photo" class="text-center">');
-    img.attr('src', 'data:image/png;base64,' + data[i].media);
+    console.log(data[i].media)
+    img.attr('src', data[i].media);
     imgCell.append(img);
     row.append(imgCell);
     row.append($('<td class="text-center">').text(data[i].description));
