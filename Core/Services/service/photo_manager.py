@@ -117,9 +117,9 @@ class PhotoManager:
             if resize_action_type == self.ACTION_TO_RESIZE.PROFILE:
                 return ''.join([settings.MEDIA_URL, photo.image_profile.name])
             if resize_action_type == self.ACTION_TO_RESIZE.ORIGINAL:
-                return ''.join([settings.MEDIA_URL, photo.image])
+                return ''.join([settings.MEDIA_URL, photo.image.name])
             if resize_action_type == self.ACTION_TO_RESIZE.MAIN_PAGES:
-                return ''.join([settings.MEDIA_URL, photo.image_main])
+                return ''.join([settings.MEDIA_URL, photo.image_main.name])
         else:
             raise ValueError
 
@@ -207,7 +207,7 @@ class ChangePhotoManager(PhotoManager):
         """Создание исходной формы по данным бд"""
         photo = self.photo
         file = ''.join(['data:image/png;base64,',
-                        PhotoManager._resize(self, photo=photo, resize_action_type='profile_view')])
+                        PhotoManager._resize(self, photo=photo, resize_action_type='profile')])
         initial = {'name': photo.name, 'description': photo.description}
         form = change_form.ChangePhoto(initial=initial)
         return {'form': form, 'file': file}
@@ -216,7 +216,7 @@ class ChangePhotoManager(PhotoManager):
         """Создание словаря исходной фотки по даннмы в бд """
         photo = self.photo
         response = {'name': photo.name, 'description': photo.description, 'media':
-            PhotoManager._resize(self, photo=photo, resize_action_type='profile_view')}
+            PhotoManager._resize(self, photo=photo, resize_action_type='profile')}
         return response
 
     def change_form(self):
@@ -261,7 +261,7 @@ class ChangePhotoManager(PhotoManager):
 
     def get_change_photo(self):
         """Получение фоток очереди на изменения"""
-        resize_type = 'profile_view'
+        resize_type = 'profile'
         update_photos = []
         changes = PhotoChange.objects.all()
         for change in changes:
@@ -277,7 +277,6 @@ class ChangePhotoManager(PhotoManager):
         self.set_id_change(self.request.POST.get('id'))
         upload_manager = UploadManager(request=self.request)
         if self.request.FILES:
-            upload_manager.save_photo()
             new_photo = upload_manager.save_content(returned=True)
             new_photo.state = PhotoStateEnum.ON_EDIT
             new_photo.save()
@@ -290,7 +289,7 @@ class ChangePhotoManager(PhotoManager):
                     legacy_update_photo = change.id_update
                     change.id_update = new_photo
                     change.save()
-                    self._all_delete_photo(legacy_update_photo)
+                    legacy_update_photo.delete()
         else:
             if upload_manager.validate_name() is True:
                 self.photo.name = self.request.POST.get('name')

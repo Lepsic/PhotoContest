@@ -62,7 +62,7 @@ class UploadManager:
         self.__validate_type_photo()
         self.validate_name()
 
-    def validate_api(self):
+    def _validate_api(self):
         photo_type = self.request.FILES[self.media_field].content_type
         if isinstance(self.request.FILES[self.media_field], InMemoryUploadedFile) or isinstance(
                 self.request.FILES[self.media_field],
