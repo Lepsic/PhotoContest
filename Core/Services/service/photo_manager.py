@@ -12,14 +12,17 @@ from ..tasks import schedule_delete_photo
 from .content_manager import ContentManager
 from .upload_photo import UploadManager
 from .notification import delete_photo_notification
+from django.conf import settings
 
 
 class PhotoManager:
     """Класс для взаимодействия с картинками"""
 
-    ACTION_TO_RESIZE = {'profile_view': (220, 135),
-                        'main_pages_view': (1280, 720),
-                        }
+    class ACTION_TO_RESIZE:
+        PROFILE = 'profile'
+        MAIN_PAGES = 'main'
+        ORIGINAL = 'original'
+
 
     def __init__(self, request=None):
         self.ContentManager = ContentManager
@@ -47,30 +50,30 @@ class PhotoManager:
             logger.error("Не корректное значение filter_value из filter_content_profile.js")
             logger.info(type_filter)
         if type_filter == "None":
-            return self._create_response_dictionary(photos=photos, resize_action_type='profile_view')
+            return self._create_response_dictionary(photos=photos, resize_action_type='profile')
         else:
             if type_filter == 0:
                 photos = PhotoContent.objects.filter(Q(state=PhotoStateEnum.WAIT_APPROVED) |
                                                      Q(state=PhotoStateEnum.ON_EDIT), user_id=self.user)
-                return self._create_response_dictionary(photos, resize_action_type='profile_view')
+                return self._create_response_dictionary(photos, resize_action_type='profile')
             if type_filter == 1:
                 photos = PhotoContent.objects.filter(state=PhotoStateEnum.APPROVED, user_id=self.user)
-                return self._create_response_dictionary(photos, resize_action_type='profile_view')
+                return self._create_response_dictionary(photos, resize_action_type='profile')
             if type_filter == -1:
                 photos = PhotoContent.objects.filter(state=PhotoStateEnum.ON_DELETE, user_id=self.user)
-                return self._create_response_dictionary(photos, resize_action_type='profile_view')
+                return self._create_response_dictionary(photos, resize_action_type='profile')
             photos = PhotoContent.objects.filter(state=type_filter, user_id=self.user)
-            return self._create_response_dictionary(photos, resize_action_type='profile_view')
+            return self._create_response_dictionary(photos, resize_action_type='profile')
 
     def generate_photo_dictionary_on_publication_stack(self):
         """Генерация словаря фото"""
         photos = PhotoContent.objects.filter(state=PhotoStateEnum.WAIT_APPROVED)
-        response = self._create_response_dictionary(photos, 'profile_view')
+        response = self._create_response_dictionary(photos, 'profile')
         return response
 
     def generate_photo_dictionary_on_rejected_stack(self):
         photos = PhotoContent.objects.filter(state=PhotoStateEnum.REJECTED)
-        response = self._create_response_dictionary(photos, 'profile_view')
+        response = self._create_response_dictionary(photos, 'profile')
         return response
 
     def generate_photo_dictionary_on_photocard(self, image_id):
@@ -91,7 +94,7 @@ class PhotoManager:
         if photos is None:
             sort_type = self.request.POST.get('sort_type')
             photos = self.__sort_photo_main_pages(sort_type)
-        response = self._create_response_dictionary(photos=photos, resize_action_type='main_pages_view')
+        response = self._create_response_dictionary(photos=photos, resize_action_type='main')
         if self.request.user.is_authenticated:
             for photo in response['data']:
                 if Likes.objects.filter(photo_id=photo['id'], user_id=self.request.user).exists():
@@ -109,18 +112,16 @@ class PhotoManager:
         return response
 
     def _resize(self, photo, resize_action_type):
-        img = Image.open(photo.content_path)
-        if resize_action_type != 'original':
-            img_resized = img.resize(self.ACTION_TO_RESIZE[resize_action_type])
-            buffered = BytesIO()
-            img_resized.save(buffered, format='png')
-            img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-            return img_base64
+        if resize_action_type in (self.ACTION_TO_RESIZE.PROFILE, self.ACTION_TO_RESIZE.MAIN_PAGES,
+                                  self.ACTION_TO_RESIZE.ORIGINAL):
+            if resize_action_type == self.ACTION_TO_RESIZE.PROFILE:
+                return ''.join([settings.MEDIA_URL, photo.image_profile.name])
+            if resize_action_type == self.ACTION_TO_RESIZE.ORIGINAL:
+                return ''.join([settings.MEDIA_URL, photo.image])
+            if resize_action_type == self.ACTION_TO_RESIZE.MAIN_PAGES:
+                return ''.join([settings.MEDIA_URL, photo.image_main])
         else:
-            buffered = BytesIO()
-            img.save(buffered, format='png')
-            img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
-            return img_base64
+            raise ValueError
 
     def _create_response_dictionary(self, photos, resize_action_type):
         """Создает словарь response с фотками"""
