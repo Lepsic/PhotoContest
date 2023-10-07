@@ -3,6 +3,7 @@ from django_fsm import FSMIntegerField, transition
 
 
 
+
 class PhotoStateEnum:
     WAIT_APPROVED = 0  # В ожидании публикации
     APPROVED = 1  # Опубликовано
@@ -92,3 +93,5 @@ class PhotoContent(models.Model):
     def finish_edit(self):
         self.state = PhotoStateEnum.DONT_SHOW
         self.save()
+
+
