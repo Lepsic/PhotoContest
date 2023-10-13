@@ -44,8 +44,9 @@ class Moderation:
         source_photo.name = update_photo.name
         source_photo.description = update_photo.description
         source_photo.create_data = update_photo.create_data
-        source_photo.content = update_photo.content
-        source_photo.content_path = update_photo.content_path
+        source_photo.image = update_photo.image
+        source_photo.image_main = update_photo.image_main
+        source_photo.image_profile = update_photo.image_profile
         source_photo.save()
         update_photo.finish_edit()
         change.delete()

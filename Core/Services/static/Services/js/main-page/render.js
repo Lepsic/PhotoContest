@@ -411,7 +411,7 @@ function generatePage(photos) {
         container.appendChild(card);
 
         const image = createElement('img', ['card-img-top']);
-        image.src = 'data:image/png;base64,' + photo.media;
+        image.src =  photo.media;
         image.alt = 'Фотография';
         card.appendChild(image);
         image.addEventListener('click', function (event){

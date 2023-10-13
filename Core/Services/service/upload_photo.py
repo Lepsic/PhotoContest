@@ -5,8 +5,9 @@ from decouple import config
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 from loguru import logger
-
 from ..models import PhotoContent
+from ..tasks import version_photo_created
+
 
 
 class UploadManager:
@@ -48,8 +49,9 @@ class UploadManager:
     def __validate_type_photo(self):
         """Валидация типа данных"""
         photo_type = self.request.FILES[self.media_field].content_type
-        if isinstance(self.request.FILES[self.media_field], InMemoryUploadedFile) or isinstance(self.request.FILES['media'],
-                                                                                       TemporaryUploadedFile):
+        if isinstance(self.request.FILES[self.media_field], InMemoryUploadedFile) or isinstance(
+                self.request.FILES['media'],
+                TemporaryUploadedFile):
             if photo_type not in self.content_type:
                 self.form.add_error('media', 'Недопустимый тип файла. Файл должен быть форматом jpg или png')
         else:
@@ -60,7 +62,7 @@ class UploadManager:
         self.__validate_type_photo()
         self.validate_name()
 
-    def validate_api(self):
+    def _validate_api(self):
         photo_type = self.request.FILES[self.media_field].content_type
         if isinstance(self.request.FILES[self.media_field], InMemoryUploadedFile) or isinstance(
                 self.request.FILES[self.media_field],
@@ -75,37 +77,31 @@ class UploadManager:
 
         return True
 
-
-    def save_photo(self, photo_form=None):
-        """Сохранение фото в файловую систему"""
-        if self.request is not None:
-            photo = self.request.FILES[self.media_field]
-        else:
-            photo = photo_form
-
-        name = ''.join([datetime.now().strftime('%Y-%m-%d%H:%M:%S.%f'), photo.name.replace(' ', '')])
-        self.absolute_path_photo = f'{self.path_to_static}/{self.PhotoDirectory}/{name}'
-
-        self.path_photo = f"{self.PhotoDirectory}/{name}"
-        with open(self.absolute_path_photo, 'wb+') as destination:
-            for chunk in photo.chunks():
-                destination.write(chunk)
-        self.path_photo = f"{settings.STATIC_URL}{self.PhotoDirectory}/{name}"
-
-
+    # def save_photo(self, photo_form=None):
+    #     """Сохранение фото в файловую систему"""
+    #     if self.request is not None:
+    #         photo = self.request.FILES[self.media_field]
+    #     else:
+    #         photo = photo_form
+    #
+    #     name = ''.join([datetime.now().strftime('%Y-%m-%d%H:%M:%S.%f'), photo.name.replace(' ', '')])
+    #     self.absolute_path_photo = f'{self.path_to_static}/{self.PhotoDirectory}/{name}'
+    #
+    #     self.path_photo = f"{self.PhotoDirectory}/{name}"
+    #     with open(self.absolute_path_photo, 'wb+') as destination:
+    #         for chunk in photo.chunks():
+    #             destination.write(chunk)
+    #     self.path_photo = f"{settings.STATIC_URL}{self.PhotoDirectory}/{name}"
 
     def save_content(self, photo_value=None, returned=False):
         """Создание модели и сохранение ее в бд returned - Нужно ли возвращать получившуюся в бд запись"""
         request_data = self.request.POST
-        try:
-
-            self.save_photo()
-            photo = PhotoContent.objects.create(user_id=self.request.user, name=request_data['name'],
-                                                description=request_data['description'], content=self.path_photo,
-                                                create_data=datetime.now(), content_path=self.absolute_path_photo)
-            photo.save()
-            if returned:
-                return photo
-        except Exception as error:
-            logger.error(error)
-            os.remove(self.absolute_path_photo)
+        request_photo = self.request.FILES[self.media_field]
+        # self.save_photo()
+        photo = PhotoContent.objects.create(user_id=self.request.user, name=request_data['name'],
+                                            description=request_data['description'], image=request_photo,
+                                            create_data=datetime.now())
+        photo.save()
+        version_photo_created(photo)
+        if returned:
+            return photo
