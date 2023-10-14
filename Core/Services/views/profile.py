@@ -11,6 +11,7 @@ from ..forms.upload_photo_form import UploadPhoto
 from ..models import PhotoContent
 from ..service.photo_manager import ChangePhotoManager, PhotoManager
 
+
 login_url = '/authentication/login/'
 
 

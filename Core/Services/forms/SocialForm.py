@@ -1,6 +1,7 @@
 from allauth.socialaccount.forms import SignupForm, BaseSignupForm
 from django import forms
-from ..service.auth import ServiceCreationUser
+from Services.service.auth.service_creation_user import SaveUser
+from Services.service.auth.service_validate import ServiceValidateUserData
 
 
 
@@ -9,7 +10,7 @@ from ..service.auth import ServiceCreationUser
 class MyCustomSocialSignupForm(SignupForm):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.service = ServiceCreationUser(form=self)
+        self.service = ServiceValidateUserData(form=self)
 
     class Meta:
         fields = ['username', 'pas1', 'pas2']
@@ -21,8 +22,7 @@ class MyCustomSocialSignupForm(SignupForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        self.service.set_data(data=cleaned_data)
-        self.service.validate_all()
+        self.service.run_validate()
 
     def save(self, request):
         user = super().save(request)

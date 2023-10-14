@@ -5,13 +5,14 @@ from allauth.account.views import SignupView
 
 from ..forms import auth_forms
 from ..forms import SocialForm
-
+from Services.service.auth.service_creation_user import SaveUser
 
 def create_user(request):
     if request.method == 'POST':
         form = auth_forms.UserCreationsForm(request.POST)
         if form.is_valid():
-            form.service.SaveUser()
+            save_user_class = SaveUser(form)
+            save_user_class.save_user()
             return redirect('login')
         else:
             return render(request, 'auth/create.html', {'form': form})
