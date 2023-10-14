@@ -50,4 +50,4 @@ class RegistrationUserService(ServiceWithResult):
         user = CustomUser.objects.create_user(username=self.cleaned_data['username'],
                                               password=self.cleaned_data['pas1'],
                                               first_name=self.cleaned_data['name'])
-        user.save()
+        return user
