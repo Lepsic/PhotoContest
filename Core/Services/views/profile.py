@@ -8,6 +8,7 @@ from django.views import View
 
 from ..forms.change_form import ChangePhoto
 from ..forms.upload_photo_form import UploadPhoto
+from Services.service.photo.upload_photo_form_service import UploadPhotoService
 from ..models import PhotoContent
 from ..service.photo_manager import ChangePhotoManager, PhotoManager
 
@@ -36,16 +37,14 @@ def a_filter_content(request):
 def upload_photo(request):
     """Загрузка фото на сервер"""
     if request.method == 'POST':
-        form = UploadPhoto(request.POST, request.FILES)
-        form.service_validate.set_data(request)
-        if form.is_valid():
-            form.service_validate.save_content()
-            return redirect('profile')
+        service = UploadPhotoService(request.POST, request.FILES, user=request.user)
+        if service.is_valid():
+            service.process()
         else:
-            return render(request, 'Account/upload.html', {'form': form})
+            return render(request, 'Account/upload.html', {'form': service})
     else:
-        form = UploadPhoto()
-    return render(request, 'Account/upload.html', {'form': form})
+        service = UploadPhotoService()
+    return render(request, 'Account/upload.html', {'form': service})
 
 
 @login_required(login_url=login_url)
