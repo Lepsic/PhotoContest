@@ -4,6 +4,7 @@ from loguru import logger
 
 from ..models import Comments, Likes, PhotoContent
 from .notification import comment_notification, like_notification
+from api.utils.service_outcome import ServiceOutcome
 
 
 class ContentManager:

@@ -5,7 +5,10 @@ from django.shortcuts import render
 from ..service.content_manager import ContentManager
 from ..service.photo_manager import PhotoManager
 from Services.service.photo.get import GetPhotoServiceBase
+from Services.service.content.like.action import ActionLikeService
+from Services.service.content.like.get import GetLikeService
 from api.utils.service_outcome import ServiceOutcome
+
 
 login_url = '/authentication/login/'
 
@@ -26,18 +29,15 @@ def get_photo_content(request):
 
 @login_required(login_url=login_url)
 def likes_action(request):
-    content_manager = ContentManager
-    user = request.user
-    photo_id = request.POST.get('photo_id')
-    content_manager.likes_action(user=user, photo_id=photo_id)
-    response = {"count_likes": str(content_manager.get_count_likes_by_photo(request.POST.get('photo_id')))}
-    return JsonResponse(response)
+    outcome = ServiceOutcome(ActionLikeService(user=request.user),
+                             {'photo_id': request.POST.get('photo_id')})
+    return JsonResponse(outcome.result)
 
 
 def get_count_likes(request):
-    content_manager = ContentManager
-    response = {"count_likes": str(content_manager.get_count_likes_by_photo(request.POST.get('photo_id')))}
-    return JsonResponse(response)
+    """photo_id"""
+    outcome = ServiceOutcome(GetLikeService(), {'photo_id': request.POST.get('photo_id')})
+    return JsonResponse(outcome.result)
 
 
 @login_required(login_url=login_url)
