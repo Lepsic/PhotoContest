@@ -4,6 +4,8 @@ from django.shortcuts import render
 
 from ..service.content_manager import ContentManager
 from ..service.photo_manager import PhotoManager
+from Services.service.photo.get import GetPhotoServiceBase
+from api.utils.service_outcome import ServiceOutcome
 
 login_url = '/authentication/login/'
 
@@ -16,9 +18,10 @@ def main_page(request):
 
 
 def get_photo_content(request):
-    manager = PhotoManager(request)
-    response = manager.generate_photo_dictionary_on_main_page()
-    return JsonResponse(response)
+    outcome = ServiceOutcome(GetPhotoServiceBase(request.user),
+                             {'methods': '_generate_photo_dictionary_on_main_page',
+                              'sort_type': request.POST.get('sort_type')})
+    return JsonResponse(outcome.result)
 
 
 @login_required(login_url=login_url)

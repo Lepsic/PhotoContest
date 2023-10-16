@@ -4,7 +4,6 @@ from Services.tasks import version_photo_created
 from api.utils.service_with_result import ServiceWithResult
 from django import forms
 from Services.models.photo_content import PhotoContent
-from django.core.exceptions import ObjectDoesNotExist
 
 
 class UploadPhotoService(ServiceWithResult):

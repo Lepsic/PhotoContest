@@ -4,20 +4,23 @@ from loguru import logger
 from django.shortcuts import HttpResponse
 from django.http import HttpResponseBadRequest, HttpResponse, JsonResponse
 from django.contrib.auth.decorators import user_passes_test
+from api.utils.service_outcome import ServiceOutcome
+from Services.service.photo.get import GetPhotoServiceBase
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def get_photo_publication(request):
-    moderation = Moderation
-    response = moderation.get_publication_stack()
-    return JsonResponse(response)
+    outcome = ServiceOutcome(GetPhotoServiceBase(),
+                             {'methods': '_generate_photo_dictionary_on_publication_stack'})
+    return JsonResponse(outcome.result)
 
 
 @user_passes_test(lambda u: u.is_superuser)
 def get_photo_rejected(request):
-    moderation = Moderation
-    response = moderation.get_reject_stack()
-    return JsonResponse(response)
+    outcome = ServiceOutcome(GetPhotoServiceBase(),
+                             {'methods': '_generate_photo_dictionary_on_rejected_stack'})
+
+    return JsonResponse(outcome.result)
 
 
 @user_passes_test(lambda u: u.is_superuser)
@@ -43,10 +46,10 @@ def cancel_reject(request):
 
 @user_passes_test(lambda u: u.is_superuser)
 def get_change_photo(request):
-    manager = ChangePhotoManager()
-    response = manager.get_change_photo()
-    return JsonResponse(response)
+    outcome = ServiceOutcome(GetPhotoServiceBase(),
+                             {'methods': '_generate_photo_dictionary_on_change_stack'})
 
+    return JsonResponse(outcome.result)
 
 @user_passes_test(lambda u: u.is_superuser)
 def approve_change(request):

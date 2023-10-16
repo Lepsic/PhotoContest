@@ -11,6 +11,8 @@ from ..forms.upload_photo_form import UploadPhoto
 from Services.service.photo.upload_photo_form_service import UploadPhotoService
 from ..models import PhotoContent
 from ..service.photo_manager import ChangePhotoManager, PhotoManager
+from Services.service.photo.get import GetPhotoServiceBase
+from api.utils.service_outcome import ServiceOutcome
 
 
 login_url = '/authentication/login/'
@@ -28,9 +30,10 @@ def base_account(request):
 
 @login_required(login_url=login_url)
 def a_filter_content(request):
-    manager = PhotoManager(request=request)
-    response = manager.generate_photo_dictionary_on_profile()
-    return JsonResponse(response)
+    outcome = ServiceOutcome(GetPhotoServiceBase(user=request.user),
+                              {'methods': '_generate_photo_dictionary_on_profile',
+                               'sort_type': request.POST.get('filter_value')})
+    return JsonResponse(outcome.result)
 
 
 @login_required(login_url=login_url)
@@ -40,6 +43,7 @@ def upload_photo(request):
         service = UploadPhotoService(request.POST, request.FILES, user=request.user)
         if service.is_valid():
             service.process()
+            return redirect('profile')
         else:
             return render(request, 'Account/upload.html', {'form': service})
     else:
