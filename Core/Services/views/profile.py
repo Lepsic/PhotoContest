@@ -13,6 +13,7 @@ from ..models import PhotoContent
 from ..service.photo_manager import ChangePhotoManager, PhotoManager
 from Services.service.photo.get import GetPhotoServiceBase
 from api.utils.service_outcome import ServiceOutcome
+from Services.service.photo.change_photo_service import ChangePhotoService
 
 
 login_url = '/authentication/login/'
@@ -63,26 +64,22 @@ def delete_photo(request):
 class ChangePhotoView(View):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.manager = ChangePhotoManager()
+
 
     @method_decorator(login_required(login_url=login_url))
     def get(self, request, id):
-        self.manager.set_request(request)
-        self.manager.set_id_change(id)
-        data = self.manager.creation_form()
-        return render(request, 'Account/change.html', context={'form_source': data['form'],
-                                                               'photo': data['file']})
+        service = ChangePhotoService(photo_id=id)
+        return render(request, 'Account/change.html', context={'form_source': service,
+                                                               'photo': service.base_photo_image_profile})
 
     @method_decorator(login_required(login_url=login_url))
     def post(self, request, id):
-        self.manager.set_id_change(id)
-        self.manager.set_request(request)
-        form = ChangePhoto(request.POST, request.FILES)
-        if form.is_valid():
-            self.manager.change_form()
+        service = ChangePhotoService(request.POST, request.FILES, photo_id=id, user=request.user)
+        if service.is_valid():
+            service.process()
             return redirect('profile')
         else:
-            return render(request, 'Account/change.html', {'form': form})
+            return render(request, 'Account/change.html', {'form': service})
 
 
 @login_required(login_url=login_url)

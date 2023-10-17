@@ -18,6 +18,7 @@ class UploadPhotoService(ServiceWithResult):
 
 
     def __init__(self, *args, **kwargs):
+        self._photo = None
         self._user = kwargs.get('user')
         super(ServiceWithResult, self).__init__(*args)
 
@@ -37,6 +38,10 @@ class UploadPhotoService(ServiceWithResult):
         if PhotoContent.objects.filter(name=name).exists():
             self.add_error('name', 'Данное имя пользователя уже занято')
 
+    @property
+    def photo(self):
+        return self._photo
+
 
 
 
@@ -53,3 +58,4 @@ class UploadPhotoService(ServiceWithResult):
                                             create_data=datetime.now())
         photo.save()
         version_photo_created(photo)
+        self._photo = photo

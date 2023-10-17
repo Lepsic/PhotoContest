@@ -25,6 +25,19 @@ class GetPhotoServiceBase:
         self._response_status = None
         self._result = None
 
+    def execute(self, service_object_attributes, service_object_files):
+        methods = service_object_attributes.get('methods')
+        if methods in self.Meta.methods:
+            if 'sort_type' in service_object_attributes:
+                getattr(self, methods)(service_object_attributes.get('sort_type'))
+            else:
+                getattr(self, methods)()
+            return self
+        else:
+            self._error.update()
+            self._response_status = status.HTTP_400_BAD_REQUEST
+            return self
+
     @property
     def response_status(self):
         return self._response_status
@@ -43,18 +56,7 @@ class GetPhotoServiceBase:
         except AttributeError as error:
             self._error = error
 
-    def execute(self, service_object_attributes, service_object_files):
-        methods = service_object_attributes.get('methods')
-        if methods in self.Meta.methods:
-            if 'sort_type' in service_object_attributes:
-                getattr(self, methods)(service_object_attributes.get('sort_type'))
-            else:
-                getattr(self, methods)()
-            return self
-        else:
-            self._error.update()
-            self._response_status = status.HTTP_400_BAD_REQUEST
-            return self
+
 
     def _sort_main_pages(self, sort_type):
         if sort_type == 'create_data':
