@@ -17,7 +17,8 @@ class GetPhotoServiceBase:
     class Meta:
         methods = ['_generate_photo_dictionary_on_change_stack', '_generate_photo_dictionary_on_publication_stack',
                    '_generate_photo_dictionary_on_rejected_stack', '_generate_photo_dictionary_on_photocard',
-                   '_generate_photo_dictionary_on_main_page', '_generate_photo_dictionary_on_profile']
+                   '_generate_photo_dictionary_on_main_page', '_generate_photo_dictionary_on_profile',
+                   '_generate_photo_dictionary_on_search']
 
     def __init__(self, user=None):
         self._error = {}
@@ -56,8 +57,6 @@ class GetPhotoServiceBase:
         except AttributeError as error:
             self._error = error
 
-
-
     def _sort_main_pages(self, sort_type):
         if sort_type == 'create_data':
             photo = PhotoContent.objects.filter(state=PhotoStateEnum.APPROVED).order_by('create_data')
@@ -91,6 +90,17 @@ class GetPhotoServiceBase:
             self._error.update({'_sort_profile_pages': 'Invalid filter value'})
         return photos
 
+    def _search_photo(self, search_word):
+        photos = PhotoContent.objects.filter(state=PhotoStateEnum.APPROVED)
+        search_occurrences = []
+        for photo in photos:
+            search_list = [photo.user_id.username, photo.description, photo.name]
+            for field in search_list:
+                if search_word in field:
+                    search_occurrences.append(photo)
+                    break
+        return search_occurrences
+
     def _generate_photo_dictionary(self, action, photos, many=True):
         response = {'data': []}
         if many:
@@ -115,8 +125,9 @@ class GetPhotoServiceBase:
         photos = self._sort_profile_pages(sort_type)
         self._result = self._generate_photo_dictionary(action=self.RESIZE_ENUM.PROFILE, photos=photos)
 
-    def _generate_photo_dictionary_on_main_page(self, sort_type):
-        photos = self._sort_main_pages(sort_type)
+    def _generate_photo_dictionary_on_main_page(self, sort_type, photos=None):
+        if photos is None:
+            photos = self._sort_main_pages(sort_type)
         result = self._generate_photo_dictionary(self.RESIZE_ENUM.MAIN_PAGES, photos)
         if self._user.is_authenticated:
             for photo in result['data']:
@@ -139,8 +150,8 @@ class GetPhotoServiceBase:
             result['data'][0].update({'like_exist': 'True'})
         else:
             result['data'][0].update({'like_exist': 'False'})
-        result['data'][0].update({'like_count': str(Likes.objects.filter(photo_id=photo['id']).count())})
-        result['data'][0].update({'comment_count': str(Comments.objects.filter(photo_id=photo['id']).count())})
+        result['data'][0].update({'like_count': str(Likes.objects.filter(photo_id=photo).count())})
+        result['data'][0].update({'comment_count': str(Comments.objects.filter(parent_id_image=photo).count())})
         self._result = result
 
     def _generate_photo_dictionary_on_rejected_stack(self, **kwargs):
@@ -161,3 +172,7 @@ class GetPhotoServiceBase:
             photo_source = PhotoChange.objects.get(id_update=photo['id']).id_source
             photo.update({'source_media': self._resize(photo_source, action=self.RESIZE_ENUM.PROFILE)})
         self._result = response
+
+    def _generate_photo_dictionary_on_search(self, search_word):
+        photos = self._search_photo(search_word)
+        self._generate_photo_dictionary_on_main_page(photos=photos, sort_type=None)

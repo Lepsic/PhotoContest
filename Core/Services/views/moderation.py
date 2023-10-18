@@ -1,4 +1,4 @@
-from ..service.moderation import Moderation
+from Services.service.Moderation import Moderation
 from ..service.photo_manager import ChangePhotoManager
 from loguru import logger
 from django.shortcuts import HttpResponse
