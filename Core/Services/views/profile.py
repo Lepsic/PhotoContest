@@ -14,6 +14,7 @@ from ..service.photo_manager import ChangePhotoManager, PhotoManager
 from Services.service.photo.get import GetPhotoServiceBase
 from api.utils.service_outcome import ServiceOutcome
 from Services.service.photo.change_photo_service import ChangePhotoService
+from Services.service.photo.delete import DeletePhotoService
 
 
 login_url = '/authentication/login/'
@@ -55,9 +56,12 @@ def upload_photo(request):
 @login_required(login_url=login_url)
 def delete_photo(request):
     if request.method == 'DELETE':
-        manager = PhotoManager(request)
-        body = json.loads(request.body.decode('utf-8'))
-        manager.delete_photo(body)
+        # manager = PhotoManager(request)
+        # body = json.loads(request.body.decode('utf-8'))
+        # manager.delete_photo(body)
+        outcome = ServiceOutcome(DeletePhotoService(request.user),
+                                 {'methods': '_delete',
+                                  'data': json.loads(request.body.decode('utf-8'))})
         return HttpResponse(status=200)
 
 
@@ -84,16 +88,19 @@ class ChangePhotoView(View):
 
 @login_required(login_url=login_url)
 def cancel_delete(request):
-    photo_id = json.loads(request.body.decode('UTF-8')).get('id')
-    user = request.user
-    photo = PhotoContent.objects.get(pk=photo_id)
-    if photo.user_id == user:
-        photo.cancel_delete()
-        return HttpResponse(request, status=200)
-    else:
-        from loguru import logger
-        logger.error("Редактируемое фото не является фото, опубликовнное пользоваетлем,, отправившим запрос")
-        return HttpResponse(request, status=404)
+    # photo_id = json.loads(request.body.decode('UTF-8')).get('id')
+    # user = request.user
+    # photo = PhotoContent.objects.get(pk=photo_id)
+    # if photo.user_id == user:
+    #     photo.cancel_delete()
+    #     return HttpResponse(request, status=200)
+    # else:
+    #     from loguru import logger
+    #     logger.error("Редактируемое фото не является фото, опубликовнное пользоваетлем,, отправившим запрос")
+    outcome = ServiceOutcome(DeletePhotoService(request.user),
+                             {'methods': '_cancel_delete',
+                              'data': json.loads(request.body.decode('UTF-8'))})
+    return JsonResponse({})
 
 
 def get_user_data(request):

@@ -20,6 +20,7 @@ class DeletePhotoService:
     def execute(self, service_object_attributes, service_object_files):
         methods = service_object_attributes.get('methods')
         getattr(self, methods)(service_object_attributes.get('data'))
+        return self
 
 
 
