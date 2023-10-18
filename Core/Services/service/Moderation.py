@@ -4,6 +4,7 @@ from ..service.photo_manager import PhotoManager
 from ..tasks import schedule_reject_photo
 from .notification import global_notification
 
+
 class Moderation:
     @staticmethod
     def get_publication_stack():
