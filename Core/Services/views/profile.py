@@ -8,8 +8,14 @@ from django.views import View
 
 from ..forms.change_form import ChangePhoto
 from ..forms.upload_photo_form import UploadPhoto
+from Services.service.photo.upload_photo_form_service import UploadPhotoService
 from ..models import PhotoContent
 from ..service.photo_manager import ChangePhotoManager, PhotoManager
+from Services.service.photo.get import GetPhotoServiceBase
+from api.utils.service_outcome import ServiceOutcome
+from Services.service.photo.change_photo_service import ChangePhotoService
+from Services.service.photo.delete import DeletePhotoService
+
 
 login_url = '/authentication/login/'
 
@@ -26,73 +32,75 @@ def base_account(request):
 
 @login_required(login_url=login_url)
 def a_filter_content(request):
-    manager = PhotoManager(request=request)
-    response = manager.generate_photo_dictionary_on_profile()
-    return JsonResponse(response)
+    outcome = ServiceOutcome(GetPhotoServiceBase(user=request.user),
+                              {'methods': '_generate_photo_dictionary_on_profile',
+                               'sort_type': request.POST.get('filter_value')})
+    return JsonResponse(outcome.result)
 
 
 @login_required(login_url=login_url)
 def upload_photo(request):
     """Загрузка фото на сервер"""
     if request.method == 'POST':
-        form = UploadPhoto(request.POST, request.FILES)
-        form.service_validate.set_data(request)
-        if form.is_valid():
-            form.service_validate.save_content()
+        service = UploadPhotoService(request.POST, request.FILES, user=request.user)
+        if service.is_valid():
+            service.process()
             return redirect('profile')
         else:
-            return render(request, 'Account/upload.html', {'form': form})
+            return render(request, 'Account/upload.html', {'form': service})
     else:
-        form = UploadPhoto()
-    return render(request, 'Account/upload.html', {'form': form})
+        service = UploadPhotoService()
+    return render(request, 'Account/upload.html', {'form': service})
 
 
 @login_required(login_url=login_url)
 def delete_photo(request):
     if request.method == 'DELETE':
-        manager = PhotoManager(request)
-        body = json.loads(request.body.decode('utf-8'))
-        manager.delete_photo(body)
+        # manager = PhotoManager(request)
+        # body = json.loads(request.body.decode('utf-8'))
+        # manager.delete_photo(body)
+        outcome = ServiceOutcome(DeletePhotoService(request.user),
+                                 {'methods': '_delete',
+                                  'data': json.loads(request.body.decode('utf-8'))})
         return HttpResponse(status=200)
 
 
 class ChangePhotoView(View):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.manager = ChangePhotoManager()
+
 
     @method_decorator(login_required(login_url=login_url))
     def get(self, request, id):
-        self.manager.set_request(request)
-        self.manager.set_id_change(id)
-        data = self.manager.creation_form()
-        return render(request, 'Account/change.html', context={'form_source': data['form'],
-                                                               'photo': data['file']})
+        service = ChangePhotoService(photo_id=id)
+        return render(request, 'Account/change.html', context={'form_source': service,
+                                                               'photo': service.base_photo_image_profile})
 
     @method_decorator(login_required(login_url=login_url))
     def post(self, request, id):
-        self.manager.set_id_change(id)
-        self.manager.set_request(request)
-        form = ChangePhoto(request.POST, request.FILES)
-        if form.is_valid():
-            self.manager.change_form()
+        service = ChangePhotoService(request.POST, request.FILES, photo_id=id, user=request.user)
+        if service.is_valid():
+            service.process()
             return redirect('profile')
         else:
-            return render(request, 'Account/change.html', {'form': form})
+            return render(request, 'Account/change.html', {'form': service})
 
 
 @login_required(login_url=login_url)
 def cancel_delete(request):
-    photo_id = json.loads(request.body.decode('UTF-8')).get('id')
-    user = request.user
-    photo = PhotoContent.objects.get(pk=photo_id)
-    if photo.user_id == user:
-        photo.cancel_delete()
-        return HttpResponse(request, status=200)
-    else:
-        from loguru import logger
-        logger.error("Редактируемое фото не является фото, опубликовнное пользоваетлем,, отправившим запрос")
-        return HttpResponse(request, status=404)
+    # photo_id = json.loads(request.body.decode('UTF-8')).get('id')
+    # user = request.user
+    # photo = PhotoContent.objects.get(pk=photo_id)
+    # if photo.user_id == user:
+    #     photo.cancel_delete()
+    #     return HttpResponse(request, status=200)
+    # else:
+    #     from loguru import logger
+    #     logger.error("Редактируемое фото не является фото, опубликовнное пользоваетлем,, отправившим запрос")
+    outcome = ServiceOutcome(DeletePhotoService(request.user),
+                             {'methods': '_cancel_delete',
+                              'data': json.loads(request.body.decode('UTF-8'))})
+    return JsonResponse({})
 
 
 def get_user_data(request):
