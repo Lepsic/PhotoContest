@@ -16,12 +16,11 @@ from Services.service.content.comment.update import UpdateCommentService
 from api.utils.service_outcome import ServiceOutcome
 
 
-class GetPhoto(APIView, PhotoManager, ContentManager):
+class GetPhoto(APIView):
     """Получение и поиск опубликованных фотографий"""
 
     def __init__(self):
         super().__init__()
-        PhotoManager.__init__(self)
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -142,9 +141,10 @@ class LikeAction(APIView):
         """
         user = request.user
         if user.is_authenticated:
-            photo_id = request.POST.get('photo_id')
-            ContentManager.likes_action(photo_id, user)
-            return Response(status=status.HTTP_200_OK)
+            # photo_id = request.POST.get('photo_id')
+            # ContentManager.likes_action(photo_id, user)
+            outcome = ServiceOutcome(LikeAction(user), {'photo_id': request.POST.get('photo_id')})
+            return Response(status=outcome.response_status)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
