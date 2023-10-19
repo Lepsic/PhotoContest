@@ -4,9 +4,16 @@ from rest_framework import status
 from Services.service.photo_manager import PhotoManager
 from Services.service.content_manager import ContentManager
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.decorators import schema
 from drf_yasg import openapi
-
+from Services.service.photo.get import GetPhotoServiceBase
+from Services.service.photo.post import PostPhotoService
+from Services.service.content.like.action import ActionLikeService
+from Services.service.content.like.get import GetLikeService
+from Services.service.content.comment.get import GetCommentService
+from Services.service.content.comment.post import PostCommentService
+from Services.service.content.comment.delete import DeleteCommentService
+from Services.service.content.comment.update import UpdateCommentService
+from api.utils.service_outcome import ServiceOutcome
 
 
 class GetPhoto(APIView, PhotoManager, ContentManager):
@@ -63,14 +70,20 @@ class GetPhoto(APIView, PhotoManager, ContentManager):
         По дате создание - create_data
         """
         if request.POST.get('action') == 'search':
-            search_word = request.POST.get('searchWord')
-            photos = ContentManager.search_photo(search_word)
-            response = self.generate_photo_dictionary_on_main_page(photos=photos)
-            return Response(response, status=status.HTTP_200_OK)
+            # search_word = request.POST.get('searchWord')
+            # photos = ContentManager.search_photo(search_word)
+            # response = self.generate_photo_dictionary_on_main_page(photos=photos)
+            outcome = ServiceOutcome(GetPhotoServiceBase(request.user),
+                                     {'methods': '_generate_photo_dictionary_on_search',
+                                      'sort_type': request.POST.get('searchWord')})
+            return Response(outcome.result, status=outcome.response_status)
         if request.POST.get('action') == 'get':
-            self.update_data(request)
-            response = self.generate_photo_dictionary_on_main_page()
-            return Response(response, status=status.HTTP_200_OK)
+            # self.update_data(request)
+            # response = self.generate_photo_dictionary_on_main_page()
+            outcome = ServiceOutcome(GetPhotoServiceBase(request.user),
+                                     {'methods': '_generate_photo_dictionary_on_main_page',
+                                      'sort_type': request.POST.get('sort_type')})
+            return Response(outcome.result, status=outcome.response_status)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -93,12 +106,16 @@ class GetPhoto(APIView, PhotoManager, ContentManager):
                     'comment_count': openapi.Schema(type=openapi.TYPE_STRING, description='Количество комментариев')
                 }
             )),
-            }
+        }
     )
     def get(self, request, value_id):
-        self.update_data(request)
-        response = self.generate_photo_dictionary_on_photocard(value_id)
-        return Response(response, status=status.HTTP_200_OK)
+        # self.update_data(request)
+        # response = self.generate_photo_dictionary_on_photocard(value_id)
+        outcome = ServiceOutcome(GetPhotoServiceBase(request.user),
+                                 {'methods': '_generate_photo_dictionary_on_photocard',
+                                  'sort_type': value_id})
+
+        return Response(outcome.result, status=outcome.response_status)
 
 
 class LikeAction(APIView):
@@ -171,8 +188,8 @@ class CommentAction(APIView):
                     'user': request.user,
                     'parent_id_comment': request.POST.get('parent_id_comment'),
                     'parent_id': request.POST.get('parent_id')}
-            response = ContentManager.post_comment(data)
-            return Response(response, status=status.HTTP_200_OK)
+            outcome = ServiceOutcome(PostCommentService(request.user), data)
+            return Response(outcome.result, status=outcome.response_status)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -196,10 +213,9 @@ class CommentAction(APIView):
         id = comment_id
         """
         comment_id = request.POST.get('comment_id')
-        if ContentManager.delete_comment(comment_id, request.user):
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(status=status.HTTP_409_CONFLICT)
+        outcome = ServiceOutcome(DeleteCommentService(request.user), request.POST.get('comment_id'))
+        return Response(outcome.result, status=outcome.response_status)
+
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -222,20 +238,19 @@ class CommentAction(APIView):
         comment_id - id комментария
         editText - текст, на которой нужно заменить коммент
         """
-        comment_id = request.POST.get('comment_id')
-        edit_text = request.POST.get('editText')
-        state = ContentManager.edit_comment_content(comment_id, edit_text, request.user)
-        if state:
-            return Response(status.HTTP_200_OK)
-        else:
-            return Response(status.HTTP_409_CONFLICT)
+        # comment_id = request.POST.get('comment_id')
+        # edit_text = request.POST.get('editText')
+        outcome = ServiceOutcome(UpdateCommentService(request.user),
+                                 {'comment_id': request.POST.get('comment_id'),
+                                  'edit_text': request.POST.get('editText')})
+        return Response(outcome.result, status=outcome.response_status)
 
     @swagger_auto_schema(
         manual_parameters=[
             openapi.Parameter('value_id', openapi.IN_PATH, type=openapi.TYPE_INTEGER, description='Id фотографии'),
         ],
         responses={
-            200: openapi.Response(description='Запрос выполнен успешно',schema=openapi.Schema(
+            200: openapi.Response(description='Запрос выполнен успешно', schema=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
                     'id': openapi.Schema(type=openapi.TYPE_STRING, description='id комментария'),
@@ -255,5 +270,5 @@ class CommentAction(APIView):
         Передается id фото(value_id)
         Возвращает список комментариев словарем
         """
-        response = ContentManager.get_comments_dictionary(value_id)
-        return Response(response, status=status.HTTP_200_OK)
+        outcome = ServiceOutcome(GetCommentService(), {'photo_id': value_id})
+        return Response(outcome.result, status=outcome.response_status)
