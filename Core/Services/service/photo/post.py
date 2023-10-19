@@ -19,11 +19,11 @@ class PostPhotoService:
         self._result = None
 
 
-    def execute(self, data):
-        self._validate_type_photo(data)
+    def execute(self, data, files):
+        self._validate_type_photo(files)
         self._validate_name(data)
         if not bool(self.errors):
-            self._save_photo(data)
+            self._save_photo(data, files)
             return self
 
 
@@ -39,10 +39,10 @@ class PostPhotoService:
     def result(self):
         return self._result
 
-    def _save_photo(self, data):
+    def _save_photo(self, data, files, **kwargs):
         photo = PhotoContent.objects.create(user_id=self._user, name=data.get('name'),
                                             description=data.get('description'),
-                                            image=data.get('media'),
+                                            image=files.get('media'),
                                             create_data=datetime.now())
         photo.save()
         version_photo_created(photo)

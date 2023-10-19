@@ -5,6 +5,12 @@ from Services.service.upload_photo import UploadManager
 from Services.service.photo_manager import PhotoManager, ChangePhotoManager
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from api.utils.service_outcome import ServiceOutcome
+from Services.service.photo.post import PostPhotoService
+from Services.service.photo.get import GetPhotoServiceBase
+from Services.service.photo.delete import DeletePhotoService
+from Services.service.photo.update import UpdatePhotoService
+import json
 
 """
     Для всего требуется авторизация 
@@ -47,12 +53,11 @@ class ProfileUploadPhoto(APIView, UploadManager):
         media - файл(img/png)
         """
         self.set_data(request=request)
-        validate_result = self._validate_api()
-        if validate_result is True:
-            self.save_content()
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response({'error': validate_result}, status=status.HTTP_400_BAD_REQUEST)
+        # validate_result = self._validate_api()
+        # if validate_result is True:
+        #     self.save_content()
+        outcome = ServiceOutcome(PostPhotoService(request.user), request.POST, request.FILES)
+        return Response(status=outcome.response_status)
 
 
 class PhotoActions(APIView, PhotoManager):
@@ -92,9 +97,12 @@ class PhotoActions(APIView, PhotoManager):
         -1 - на удалении
         None - все фотки(перечисленные тут)
         """
-        self.update_data(self.request)
-        response = self.generate_photo_dictionary_on_profile()
-        return Response(response, status=status.HTTP_200_OK)
+        # self.update_data(self.request)
+        # response = self.generate_photo_dictionary_on_profile()
+        outcome = ServiceOutcome(GetPhotoServiceBase(request.user),
+                                 {'methods': '_generate_photo_dictionary_on_profile',
+                                  'sort_type': request.POST.get('filter_value')})
+        return Response(outcome.result, status=outcome.response_status)
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -118,19 +126,16 @@ class PhotoActions(APIView, PhotoManager):
         если передано знчаение cancelDelete то, произойдет отмена удаления
         """
         if request.POST.get('action') == 'delete':
-            self.update_data(self.request)
-            body = request.POST
-            result = self.delete_photo(body)
-            if result:
-                return Response(status=status.HTTP_200_OK)
-            else:
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            outcome = ServiceOutcome(DeletePhotoService(request.user),
+                                     {'methods': '_delete',
+                                      'data': json.loads(request.body.decode('utf-8'))})
+            return Response(status=outcome.response_status)
+
         if request.POST.get('action') == 'cancel':
-            status_response = self.cancel_delete()
-            if status_response == 'Success':
-                return Response(status=status.HTTP_200_OK)
-            if status_response == 'Error':
-                return Response(status=status.HTTP_400_BAD_REQUEST)
+            outcome = ServiceOutcome(DeletePhotoService(request.user),
+                                     {'methods': '_cancel_delete',
+                                      'data': json.loads(request.body.decode('utf-8'))})
+            return Response(status=outcome.response_status)
 
 
 class ChangePhoto(APIView, ChangePhotoManager):
@@ -164,6 +169,5 @@ class ChangePhoto(APIView, ChangePhotoManager):
         description - описание фотографии(может сопадать, если не совпадает, то будет изменено, передавать обязательно)
         media - файл(jpg/png) Если передан, то будет поставлена в очереди на модерацию(не обязательный параметр)
         """
-        self.set_request(request=request)
-        self.change_request()
-        return Response(status=status.HTTP_200_OK)
+        outcome = ServiceOutcome(UpdatePhotoService(request.user), request.POST, request.FILE)
+        return Response(status=outcome.response_status)
