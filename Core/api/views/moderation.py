@@ -1,10 +1,15 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from Services.service.moderation import Moderation
+from Services.service.Moderation import Moderation
 from Services.service.photo_manager import ChangePhotoManager, PhotoManager
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from Services.service.moderation.changes import ChangesService
+from Services.service.moderation.reject import RejectService
+from Services.service.moderation.publiaction import PublicationService
+from api.utils.service_outcome import ServiceOutcome
+from Services.service.photo.get import GetPhotoServiceBase
 
 
 class PublishView(APIView, Moderation, PhotoManager):
@@ -34,20 +39,20 @@ class PublishView(APIView, Moderation, PhotoManager):
     )
     def post(self, request):
         """Публикация фотографий"""
-        pk = request.POST.get('id')
         action = request.POST.get('action')
         user = request.user
         if user.is_superuser:
             if action == 'publish':
-                Moderation.publication(pk)
-                return Response(status.HTTP_200_OK)
+                outcome = ServiceOutcome(PublicationService(), {'post_id': request.POST.get('id')})
+                return Response(outcome.response_status)
             elif action == 'reject':
-                Moderation.reject(pk)
-                return Response(status.HTTP_200_OK)
+                outcome = ServiceOutcome(RejectService(), {'methods': '_reject',
+                                                           'post_id': request.POST.get('id')})
+                return Response(status=outcome.response_status)
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(status.HTTP_401_UNAUTHORIZED)
+            return Response(status=status.HTTP_401_UNAUTHORIZED)
 
     @swagger_auto_schema(
         responses={
@@ -69,8 +74,9 @@ class PublishView(APIView, Moderation, PhotoManager):
         Получает список фотографий в очереди на публикацию
         """
         if request.user.is_superuser:
-            response = self.generate_photo_dictionary_on_publication_stack()
-            return Response(response, status=status.HTTP_200_OK)
+            outcome = ServiceOutcome(GetPhotoServiceBase(),
+                                     {'methods': '_generate_photo_dictionary_on_publication_stack'})
+            return Response(outcome.result, status=outcome.response_status)
         else:
             return Response(status.HTTP_401_UNAUTHORIZED)
 
@@ -122,8 +128,10 @@ class RejectView(APIView, Moderation, PhotoManager):
     def post(self, request):
         user = request.user
         if user.is_superuser:
-            Moderation.cancel_reject(request.POST.get('id'))
-            return Response(status=status.HTTP_200_OK)
+            # Moderation.cancel_reject(request.POST.get('id'))
+            outcome = ServiceOutcome(RejectService(), {'methods': '_reject',
+                                                       'post_id': request.POST.get('id')})
+            return Response(status=outcome.response_status)
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -153,8 +161,9 @@ class ChangeView(APIView, ChangePhotoManager, Moderation):
     def get(self, request):
         """Получет фотки в очереди на изменение"""
         if request.user.is_superuser:
-            response = self.get_change_photo()
-            return Response(response, status=status.HTTP_200_OK)
+            outcome = ServiceOutcome(GetPhotoServiceBase(),
+                                     {'methods': '_generate_photo_dictionary_on_change_stack'})
+            return Response(outcome.result, status=outcome.response_status)
         else:
             return Response(status=status.HTTP_401_UNAUTHORIZED)
 
@@ -185,11 +194,14 @@ class ChangeView(APIView, ChangePhotoManager, Moderation):
         pk = request.POST.get('id')
         if user.is_superuser:
             if action == 'publish':
-                Moderation.approve_public_change(pk)
-                return Response(status=status.HTTP_200_OK)
+                outcome = ServiceOutcome(ChangesService(),
+                                         {'methods':  '_approve_changes',
+                                          'change_id': request.POST.get('id')})
+                return Response(status=outcome.response_status)
             elif action == 'reject':
-                Moderation.cancel_public_change(pk)
-                return Response(status=status.HTTP_200_OK)
+                outcome = ServiceOutcome(ChangesService(), {'methods': '_reject_changes',
+                                                            'change_id': request.POST.get('id')})
+                return Response(status=outcome.response_status)
             else:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
         else:
